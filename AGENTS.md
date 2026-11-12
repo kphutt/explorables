@@ -83,6 +83,13 @@ Permissions-Policy equals kphutt.com's (`PERMISSIONS_POLICY` in `scripts/check.p
 `favicon.svg` are cached for 30 days, never `immutable`, because their names carry no content
 hash.
 
+Every server feature explorables do not use is written out as off in `server/sws.toml`
+(health, metrics, CORS, basic auth, the fallback page, TLS, HTTP/2, ETags and the rest), and
+`idle-timeout` is set, which is the fix for GHSA-2fch-9x9r-mxmv. A value in the file overrides
+the binary's default and any `SERVER_*` environment variable. `scripts/check.py` fails if one
+is turned on, left out or misspelled, if a key it does not know appears (static-web-server v3
+only warns about one), or if any `[advanced]` table other than `headers` appears.
+
 The pages carry no Content-Security-Policy meta tag. The header is the only policy, so there
 is one copy to keep right. Add or change a header in `server/sws.toml`, and change the floor
 in `scripts/check.py` only as a deliberate decision.

@@ -15,8 +15,9 @@ Everything else is held to the same rules as kphutt.com, applied by scripts/rule
     landing page and every explorable, by absolute URL on ORIGIN;
   - server/sws.toml sends the full header set, with a Content-Security-Policy no weaker
     than POLICY_FLOOR on any directive, Trusted Types with no policy allowed, COEP,
-    X-Frame-Options, HSTS with includeSubDomains and without preload, compression, and a
-    long but not immutable cache for fonts and favicon.svg;
+    X-Frame-Options, HSTS with includeSubDomains and without preload, compression, every
+    server feature explorables do not use written out as off (rules.SERVER_FEATURES_OFF),
+    idle-timeout of at least 1, and a long but not immutable cache for fonts and favicon.svg;
   - every pages/<slug>/ has an index.html and a README.md, and no README is in the
     output, where the server would serve it;
   - nothing for building is in the output either: no src/ folder of readable sources,
@@ -168,14 +169,11 @@ def check_server(failures: list, config: Path = CONFIG) -> None:
         if not age or int(age.group(1)) < MIN_LONG_CACHE:
             failures.append(f"{name}: no rule for {source!r} with Cache-Control max-age of at least {MIN_LONG_CACHE}")
 
+    # Every server feature explorables do not use is off, idle-timeout (the
+    # GHSA-2fch-9x9r-mxmv fix) is at least 1, and no [advanced] table but headers exists.
+    rules.check_server_settings(failures, config, frozenset({"headers"}))
     general = parsed.get("general", {})
-    # The GHSA-2fch-9x9r-mxmv fix: v3 closes idle connections only while idle-timeout is at
-    # least 1 (0 turns it off). Required explicitly, so a default change cannot undo it.
-    idle = general.get("idle-timeout")
-    if isinstance(idle, bool) or not isinstance(idle, int) or idle < 1:
-        failures.append(f"{name}: idle-timeout must be set to 1 or more seconds (GHSA-2fch-9x9r-mxmv), got {idle!r}")
-    for key, want in (("page404", "404.html"), ("directory-listing", False), ("include-hidden", False),
-                      ("compression", True)):
+    for key, want in (("page404", "404.html"), ("include-hidden", False), ("compression", True)):
         if general.get(key) != want:
             failures.append(f"{name}: {key} must be {want!r}, got {general.get(key)!r}")
 
