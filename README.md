@@ -75,7 +75,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
   configuration, the workflows, and each page's markup, script and styles.
 - Content is under Creative Commons Attribution 4.0 International
   ([LICENSE-CONTENT](LICENSE-CONTENT)): the words, numbers, data, images and screenshots each
-  explorable presents, in its HTML and its README. To reuse it, credit kphutt and link to
+  explorable presents, in its HTML and its README. To reuse it, credit Karsten Huttelmaier and link to
   <https://explorables.kphutt.com/>.
 - Fonts keep their own licenses, which are beside them in `pages/assets/fonts/`. Inter and
   Space Grotesk are under the SIL Open Font License 1.1.
