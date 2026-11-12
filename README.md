@@ -51,7 +51,8 @@ The rules:
   inline `<script>` or `<style>`, no `style=` or `on...=` attributes, no `javascript:` URLs.
 - Everything a page loads comes from this origin, by a relative URL. That includes fonts:
   bundle them, with their license.
-- No network calls. The policy has `connect-src 'none'`, so `fetch` and the like are blocked.
+- No network calls. The policy's `connect-src` names only this site's own `robots.txt` (so
+  Lighthouse can read it), so `fetch` and the like are blocked for everything else.
 - Trusted Types are required, and no policy may be created. Build the page with DOM methods
   (`textContent`, `createElement`) rather than by assigning strings to `innerHTML`. Set styles
   through the CSSOM (`element.style`), never a `style=` attribute.
@@ -66,7 +67,7 @@ keeps `explorables.kphutt.com` and `kphutt.com` apart, so nothing a page here do
 the main site, and the main site keeps a policy with no script at all.
 
 Every response, the 404 page included, carries a strict Content-Security-Policy: scripts,
-styles, images and fonts from this origin only, no inline code, no network calls, and
+styles, images and fonts from this origin only, no inline code, no network calls except to its own robots.txt, and
 Trusted Types with no policy allowed. It also sets HSTS, `X-Frame-Options: DENY`,
 cross-origin isolation (COOP, COEP and CORP), `Referrer-Policy: no-referrer` and a
 Permissions-Policy that turns off the camera, microphone, location and the rest. The policy

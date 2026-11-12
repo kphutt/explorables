@@ -51,6 +51,9 @@ SOURCE = REPO / "pages"
 CONFIG = REPO / "server" / "sws.toml"
 DOCKERFILE = REPO / "Dockerfile"
 
+# This origin's robots.txt. connect-src may name it and nothing else.
+ROBOTS_URL = f"{ORIGIN}/robots.txt"
+
 # The weakest policy explorables may ship: each directive maps to the only sources it may
 # hold, and a directive not listed may only be 'none'. So script-src gaining
 # 'unsafe-inline', a hash, a nonce, another origin or a wildcard fails, and so does
@@ -61,14 +64,17 @@ POLICY_FLOOR = {
     "style-src": {"'self'"},
     "img-src": {"'self'"},
     "font-src": {"'self'"},
-    "connect-src": {"'none'"},
+    # One exact file, so Lighthouse can fetch robots.txt from the page. Compared as a whole
+    # source expression: 'self', the bare origin, a trailing slash (which would match a
+    # whole path prefix), a wildcard or another scheme all fail.
+    "connect-src": {"'none'", ROBOTS_URL},
     "object-src": {"'none'"},
     "base-uri": {"'none'"},
     "form-action": {"'none'"},
     "frame-ancestors": {"'none'"},
 }
-# Every directive in the floor must be written out, connect-src 'none' included, so the
-# policy says in so many words that a page makes no network calls. The three restrict-only
+# Every directive in the floor must be written out, connect-src included, so the policy says
+# in so many words that a page calls nothing but its own robots.txt. The three restrict-only
 # directives below are required too, and check_server checks their values:
 # rules.policy_problems accepts any value for them.
 REQUIRED_DIRECTIVES = (*POLICY_FLOOR, "require-trusted-types-for", "trusted-types", "upgrade-insecure-requests")
@@ -358,7 +364,7 @@ def main() -> int:
     print(f"Explorables check passed: {len(slugs)} explorable(s), all in the sitemap and findable")
     print("in search (only 404.html noindex), each with a title, description and canonical URL,")
     print("no inline code, nothing loaded from another origin, no README, source, tooling or")
-    print("dot-file served, CSP at or above the floor in server/sws.toml, connect-src 'none',")
+    print("dot-file served, CSP at or above the floor in server/sws.toml, connect-src only robots.txt,")
     print("every required header set, base image pinned by version and digest.")
     return 0
 

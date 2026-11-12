@@ -85,12 +85,14 @@ GIT_DATE = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:Z|[+-]\d\d:\d\d)")
 
 
 def robots_txt() -> str:
-    # Every crawler is welcome, for every use: search, live AI answers and AI training. The
-    # Content-Signal line says so in Cloudflare's Content Signals format
-    # (contentsignals.org); crawlers that do not know it ignore it (RFC 9309). To stop AI
-    # training, set ai-train=no. kphutt.com's robots.txt states the same policy.
+    # Every crawler is welcome, for every use: search, live AI answers and AI training.
+    # Allowing everything is what robots.txt means when nothing is disallowed, so there are
+    # no per-crawler groups and no Content-Signal line (Lighthouse fails robots.txt on a
+    # directive it does not know). To stop AI training, add a group per training crawler
+    # after this one, such as "User-agent: GPTBot" then "Disallow: /"; the same goes for
+    # ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Amazonbot, meta-externalagent and
+    # Bytespider. kphutt.com's robots.txt states the same policy.
     return ("User-agent: *\n"
-            "Content-Signal: search=yes, ai-input=yes, ai-train=yes\n"
             "Allow: /\n"
             f"\nSitemap: {ORIGIN}/sitemap.xml\n")
 

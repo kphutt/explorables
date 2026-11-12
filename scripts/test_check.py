@@ -362,10 +362,11 @@ class Generated(GateTest):
 
     def test_robots_welcomes_every_use(self):
         text = (self.tree.root / "robots.txt").read_text(encoding="utf-8")
-        self.assertEqual(text.splitlines()[:3], [
+        self.assertEqual(text.splitlines(), [
             "User-agent: *",
-            "Content-Signal: search=yes, ai-input=yes, ai-train=yes",
             "Allow: /",
+            "",
+            "Sitemap: https://explorables.kphutt.com/sitemap.xml",
         ])
 
     def test_llms_txt_names_the_author_and_lists_each_explorable(self):
@@ -658,7 +659,7 @@ class Sources(GateTest):
 
 
 CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; "
-       "connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; "
+       "connect-src https://explorables.kphutt.com/robots.txt; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; "
        "require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests")
 
 
@@ -699,15 +700,44 @@ class Headers(GateTest):
         self.assertFails("default-src allows 'self'")
 
     def test_connect_src_self(self):
-        self.csp("connect-src 'none'", "connect-src 'self'")
+        self.csp(f"connect-src {ce.ROBOTS_URL}", "connect-src 'self'")
         self.assertFails("connect-src allows 'self'")
 
     def test_connect_src_another_origin(self):
-        self.csp("connect-src 'none'", "connect-src https://api.example.com")
+        self.csp(f"connect-src {ce.ROBOTS_URL}", "connect-src https://api.example.com")
         self.assertFails("connect-src allows https://api.example.com")
 
+    def test_connect_src_none_passes(self):
+        self.csp(f"connect-src {ce.ROBOTS_URL}", "connect-src 'none'")
+        self.assertEqual(self.tree.failures(), [])
+
+    def test_the_config_names_exactly_the_robots_url(self):
+        self.assertEqual(ce.ROBOTS_URL, "https://explorables.kphutt.com/robots.txt")
+        self.assertIn(f"connect-src {ce.ROBOTS_URL};", self.tree.config.read_text(encoding="utf-8"))
+        self.assertEqual(self.tree.failures(), [])
+
+    def test_connect_src_broader_than_robots_txt(self):
+        original = self.tree.config.read_text(encoding="utf-8")
+        for broader in (
+            "'self'",
+            "*",
+            "https:",
+            "https://explorables.kphutt.com",
+            "https://explorables.kphutt.com/",
+            "https://explorables.kphutt.com/robots.txt/",
+            "https://explorables.kphutt.com/*",
+            "https://*.kphutt.com/robots.txt",
+            "http://explorables.kphutt.com/robots.txt",
+            "explorables.kphutt.com/robots.txt",
+            "https://explorables.kphutt.com/sitemap.xml",
+            "https://kphutt.com/robots.txt",
+        ):
+            with self.subTest(broader=broader):
+                self.tree.config.write_text(original.replace(f"connect-src {ce.ROBOTS_URL}", f"connect-src {broader}"), encoding="utf-8")
+                self.assertFails(f"connect-src allows {broader}")
+
     def test_connect_src_left_out(self):
-        self.csp("connect-src 'none'; ", "")
+        self.csp(f"connect-src {ce.ROBOTS_URL}; ", "")
         self.assertFails("connect-src is missing")
 
     def test_an_unlisted_fetch_directive(self):

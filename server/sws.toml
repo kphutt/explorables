@@ -96,12 +96,16 @@ source = "**"
 # kphutt.com's policy, with these changes: script-src 'self' so a page can run its own script
 # files, font-src 'self' for bundled fonts, and Trusted Types with no policy allowed
 # (require-trusted-types-for 'script' plus trusted-types 'none'), so no script can hand a
-# string to innerHTML or an eval-like sink. connect-src 'none' says outright that fetch,
-# XHR, WebSocket and beacons are blocked, so a page cannot call any API, this one included.
+# string to innerHTML or an eval-like sink. connect-src names one file, this origin's
+# robots.txt, and nothing else: fetch, XHR, WebSocket and beacons to anything else are
+# blocked, so a page cannot call any API, this one included. robots.txt is there because
+# Lighthouse and Chrome DevTools fetch it from inside the page, so the page's connect-src
+# applies (docs/decisions/0003-connect-src-robots-txt.md). A URL with a path matches only
+# that exact path, and scripts/check.py accepts this one URL and nothing broader.
 # upgrade-insecure-requests turns any stray http:// load into https://. Still no
 # 'unsafe-inline', no hashes, no nonces and no other origin. Setting styles through the
 # CSSOM (element.style) is allowed by style-src 'self'; a style= attribute is not.
-Content-Security-Policy = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests"
+Content-Security-Policy = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://explorables.kphutt.com/robots.txt; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests"
 # Two years, with includeSubDomains: it covers only names under explorables.kphutt.com,
 # none of which exist or are planned. Deliberately no preload. The preload list only takes
 # an apex domain, so asking for it here would mean preloading kphutt.com and every name under
