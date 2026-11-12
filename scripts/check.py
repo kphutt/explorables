@@ -112,6 +112,7 @@ EXPECTED_FILES = {
     "404.html": "missing pages would get the server's built-in page, whose inline <style> the CSP blocks",
     "robots.txt": "crawlers would not be pointed at the sitemap",
     "sitemap.xml": "search engines would have to find each explorable on their own",
+    "llms.txt": "language models would have no index of the explorables or of who made them",
 }
 
 # Build inputs that must never be served: readable sources, the npm toolchain and source

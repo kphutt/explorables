@@ -357,6 +357,70 @@ class Findable(GateTest):
         self.assertFails("canonical link")
 
 
+class Generated(GateTest):
+    """What scripts/build.py writes: robots.txt, the sitemap's dates and llms.txt."""
+
+    def test_robots_welcomes_every_use(self):
+        text = (self.tree.root / "robots.txt").read_text(encoding="utf-8")
+        self.assertEqual(text.splitlines()[:3], [
+            "User-agent: *",
+            "Content-Signal: search=yes, ai-input=yes, ai-train=yes",
+            "Allow: /",
+        ])
+
+    def test_llms_txt_names_the_author_and_lists_each_explorable(self):
+        text = (self.tree.root / "llms.txt").read_text(encoding="utf-8")
+        lines = text.splitlines()
+        self.assertEqual(lines[0], "# Explorables")
+        self.assertTrue(lines[2].startswith("> ") and len(lines[2]) > 2, lines[2])
+        self.assertIn("Made by Karsten Huttelmaier (kphutt).", text)
+        self.assertIn(build.AUTHOR_URL, text)
+        for url in build.PROFILES.values():
+            self.assertIn(f"]({url})", text)
+        self.assertIn("- [Demo](https://explorables.kphutt.com/demo/): A demo explorable.", lines)
+        self.assertNotIn("](https://explorables.kphutt.com/)", text)
+
+    def test_llms_txt_without_a_description(self):
+        self.tree.edit(self.tree.source / "demo" / "index.html", '<meta name="description" content="A demo explorable.">', "")
+        self.tree.build()
+        self.assertIn("- [Demo](https://explorables.kphutt.com/demo/)",
+                      (self.tree.root / "llms.txt").read_text(encoding="utf-8").splitlines())
+
+    def test_a_hand_written_llms_txt_is_refused(self):
+        (self.tree.source / "llms.txt").write_text("# x", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            self.tree.build()
+
+    def test_a_missing_llms_txt_fails(self):
+        (self.tree.root / "llms.txt").unlink()
+        self.assertFails("llms.txt")
+
+    def test_the_sitemap_carries_lastmod_when_known(self):
+        text = build.sitemap_xml(["/", "/demo/"], {"/": "2026-01-02T03:04:05-08:00", "/demo/": ""})
+        self.assertIn("<loc>https://explorables.kphutt.com/</loc><lastmod>2026-01-02T03:04:05-08:00</lastmod>", text)
+        self.assertIn("<loc>https://explorables.kphutt.com/demo/</loc></url>", text)
+
+    def test_last_changed_reads_git_for_a_committed_page(self):
+        self.assertRegex(build.last_changed(build.page_files(build.SOURCE, "/")), build.GIT_DATE.pattern)
+
+    def test_last_changed_is_empty_outside_the_repository(self):
+        self.assertEqual(build.last_changed(build.page_files(self.tree.source, "/demo/")), "")
+
+    def test_last_changed_ignores_output_that_is_not_a_date(self):
+        from unittest import mock
+        fake = mock.Mock(returncode=0, stdout="fatal: not a date")
+        with mock.patch.object(build.subprocess, "run", return_value=fake):
+            self.assertEqual(build.last_changed([build.SOURCE]), "")
+
+    def test_page_summary_is_plain_text(self):
+        self.tree.edit(self.tree.source / "demo" / "index.html", "<title>Demo</title>", "<title>Demo &amp;\n  more</title>")
+        self.assertEqual(build.page_summary(self.tree.source / "demo" / "index.html"), ("Demo & more", "A demo explorable."))
+
+    def test_the_landing_page_is_its_own_two_files(self):
+        self.assertEqual(build.page_files(build.SOURCE, "/"), [build.SOURCE / "index.html", build.SOURCE / "index.css"])
+        self.assertEqual(build.page_files(build.SOURCE, "/demo/"), [build.SOURCE / "demo"])
+
+
 class Discovery(GateTest):
     def sitemap(self) -> Path:
         return self.tree.root / "sitemap.xml"
