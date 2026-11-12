@@ -7,8 +7,10 @@ plus a robots.txt and a sitemap.xml.
 Two things in pages/ are for the repository and are never served, so they are left out here:
 
   - every README.md;
-  - each explorable's src/ folder (pages/<slug>/src/), the readable sources its served
-    files are minified from (scripts/check_minify.py).
+  - each explorable's src/ folder (pages/<slug>/src/). None exists: pages are served as
+    written (docs/decisions/0002-serve-readable-source.md). The exclusion stays so that a
+    build step brought back later starts with its sources already kept out, and
+    scripts/check.py fails if a src/ folder reaches the output anyway.
 
 Nothing else is changed or dropped: a stray file is copied as it is, and scripts/check.py
 fails on it, rather than vanishing quietly. OUT is emptied first, so a file deleted from

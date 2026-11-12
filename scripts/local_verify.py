@@ -8,19 +8,15 @@ own: it runs the commands of the `ci` job in .github/workflows/ci.yml, in the sa
     python3 scripts/check.py public
     python3 scripts/check_workflows.py
     python3 -m unittest discover -s scripts -p "test_*.py"
-    python3 scripts/check_minify.py
-    npm audit --audit-level=high
 
 The secret scan runs at the pre-commit stage instead (gitleaks, in the same config). The
 container build and smoke test need Docker; with --smoke URL it runs scripts/smoke.py
 against a copy already running there, such as `docker run --rm -p 8080:8080 --read-only
 explorables` or static-web-server started on public/ with server/sws.toml.
 
-What it does add is CI's preconditions. A clean output directory: CI builds into a fresh
+What it does add is CI's precondition, a clean output directory: CI builds into a fresh
 checkout, and scripts/build.py empties public/ first, so a file deleted from pages/ cannot
-outlive it here. And a clean npm install for the minify check, which scripts/check_minify.py
-makes in a temporary folder. The minify check and npm audit need the network, to reach the
-npm registry.
+outlive it here.
 
     python scripts/local_verify.py
     python scripts/local_verify.py --smoke http://127.0.0.1:8080
@@ -28,7 +24,6 @@ npm registry.
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -55,12 +50,6 @@ def main() -> int:
     run([py, "scripts/check.py", "public"], "build check failed")
     run([py, "scripts/check_workflows.py"], "workflow check failed")
     run([py, "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"], "unit tests failed")
-    run([py, "scripts/check_minify.py"], "minify check failed")
-    npm = shutil.which("npm")
-    if not npm:
-        print("local gate FAILED: npm is not on PATH (the Node pin is in mise.toml)", file=sys.stderr)
-        return 1
-    run([npm, "audit", "--audit-level=high"], "npm audit found a high or critical advisory")
     if smoke:
         run([py, "scripts/smoke.py", smoke], "smoke test failed")
     print("\nlocal gate passed -- matches the CI ci job" + (" and its smoke test" if smoke else " (no smoke test: pass --smoke URL)"))

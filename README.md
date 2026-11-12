@@ -11,8 +11,10 @@ server. They are served at `https://explorables.kphutt.com/<slug>/`.
 ## How it works
 
 `pages/` holds the landing page, the 404 page and one folder per explorable.
-`scripts/build.py` copies it to `public/`, leaving out every `README.md` and every `src/`
-folder, and generates `robots.txt` and `sitemap.xml`. `scripts/check.py` then checks that
+`scripts/build.py` copies it to `public/`, leaving out every `README.md`, and generates
+`robots.txt` and `sitemap.xml`. Pages are served as they are written: there is no build step
+and no minifier (`docs/decisions/0002-serve-readable-source.md`), and Brotli or gzip
+compression shrinks them in transit. `scripts/check.py` then checks that
 output against the rules below. The `Dockerfile` puts the checked output behind
 [static-web-server](https://static-web-server.net), with the headers in `server/sws.toml`.
 
@@ -48,25 +50,9 @@ The rules:
 - Trusted Types are required, and no policy may be created. Build the page with DOM methods
   (`textContent`, `createElement`) rather than by assigning strings to `innerHTML`. Set styles
   through the CSSOM (`element.style`), never a `style=` attribute.
-- No dot-files. READMEs and `src/` folders stay in the repository and are never served.
-
-## Readable sources
-
-An explorable may ship minified files and keep the readable ones it is built from in
-`pages/<slug>/src/`, under the same names. backup-power does. `src/` is never served. The
-minifier is `scripts/minify.py`, with esbuild for JavaScript and CSS, and `scripts/check_minify.py`
-fails unless minifying `src/` from a clean `npm ci` gives the committed files byte for byte.
-Both make their own clean install of the locked esbuild in a temporary folder.
-
-To change a page that has sources, edit `src/`, then rewrite the served files and commit both:
-
-```bash
-python scripts/check_minify.py --write    # rewrite pages/<slug>/ from pages/<slug>/src/
-python scripts/check_minify.py            # the check CI runs
-```
-
-npm must be 11.10.0 or newer, or `.npmrc`'s 7-day wait on new releases does nothing. The Node
-pinned in `mise.toml` ships one that is.
+- No dot-files, and no build tooling: READMEs stay in the repository and are never served, and
+  the gate refuses a `src/` folder, `node_modules/`, `package.json`, lockfile or source map in
+  the output.
 
 ## Security model
 

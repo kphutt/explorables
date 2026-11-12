@@ -13,9 +13,3 @@
 /scripts/rules.py @kphutt
 /Dockerfile @kphutt
 
-# The minifier's toolchain: what runs on install, and what decides the bytes that ship.
-/package.json @kphutt
-/package-lock.json @kphutt
-/.npmrc @kphutt
-/scripts/minify.py @kphutt
-/scripts/check_minify.py @kphutt

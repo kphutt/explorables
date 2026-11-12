@@ -1,7 +1,7 @@
 # The build (scripts/build.py)
 public/
 
-# npm (package.json, package-lock.json): installed with `npm ci`, never committed
+# No npm toolchain here (docs/decisions/0002-serve-readable-source.md); never commit one
 node_modules/
 
 # Python

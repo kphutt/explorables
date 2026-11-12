@@ -1,7 +1,0 @@
-# Toolchain pin (mise -- https://mise.jdx.dev). Install once per clone: mise install
-#
-# Node, for the minifier only (package.json, scripts/check_minify.py). Its npm must be 11.10.0
-# or newer, so .npmrc's min-release-age is enforced; Node 26.13.0 ships npm 11.20.0. The CI
-# job reads this line, so CI and a local run use the same Node.
-[tools]
-node = "26.13.0"

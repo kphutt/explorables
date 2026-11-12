@@ -23,25 +23,6 @@ updates:
     labels:
       - dependencies
 
-  # The minifier and its dependencies (package.json, package-lock.json). An esbuild update can
-  # change the minified output, and then the minify check fails on the PR until the served
-  # files are rewritten from src/ (python scripts/check_minify.py --write) and reviewed. That
-  # is deliberate: the bytes that ship are reviewed, not regenerated unseen.
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-    cooldown:
-      default-days: 7
-    groups:
-      build-tools:
-        patterns:
-          - "*"
-    commit-message:
-      prefix: "chore(npm)"
-    labels:
-      - dependencies
-
   # The server image the Dockerfile pins by version and digest. The container smoke test in
   # ci.yml runs on the PR.
   - package-ecosystem: docker

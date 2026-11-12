@@ -1,9 +1,0 @@
-{
-  "name": "explorables-build",
-  "private": true,
-  "description": "Build tools only: the minifier for explorables with readable sources (scripts/minify.py). Nothing here is served.",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "esbuild": "0.28.2"
-  }
-}

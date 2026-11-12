@@ -1,1 +1,784 @@
-(function(){"use strict";var mt=/\{\{\s*([^}]+?)\s*\}\}/g;function k(p,c){for(var C=c.split("."),w=p,s=0;s<C.length;s++){if(w==null)return;w=w[C[s]]}return w}function o(p,c){return p.replace(mt,function(C,w){var s=k(c,w);return s==null?"":String(s)})}function O(p){var c=/^\{\{\s*([^}]+?)\s*\}\}$/.exec(p);return c?c[1]:null}function ye(p,c,C){for(var w=[p];w.length;){var s=w.pop();if(s.nodeType===1){if(s.tagName==="TEMPLATE"&&s.hasAttribute("data-for")){C.push(q(s));continue}for(var M=s.attributes,W=0;W<M.length;W++){var d=M[W].name,K=M[W].value;d==="data-t"?c.push(r(s,K)):d==="data-style"?c.push(re(s,K)):d.indexOf("data-a-")===0?c.push(we(s,d.slice(7),K)):d.indexOf("data-on-")===0&&et(s,d.slice(8),K,c)}for(var V=s.lastElementChild;V;V=V.previousElementSibling)w.push(V)}}}function r(p,c){var C;return function(w){var s=k(w,c);s=s==null?"":String(s),s!==C&&(p.textContent=s,C=s)}}function re(p,c){var C,w=c.indexOf("{{")<0;return function(s){if(!(w&&C!==void 0)){var M=o(c,s);M!==C&&(p.style.cssText=M,C=M)}}}function we(p,c,C){var w;return function(s){var M=o(C,s);M!==w&&(w=M,c==="value"&&"value"in p?p.value!==M&&(p.value=M):p.setAttribute(c,M))}}function et(p,c,C,w){var s=null;w.push(function(M){s=M}),p.addEventListener(c,function(M){var W=s&&k(s,C);typeof W=="function"&&W(M)})}function q(p){var c=O("{{"+p.getAttribute("data-for")+"}}"),C=p.getAttribute("data-as"),w=p.parentNode,s=[];return function(M){for(var W=k(M,c)||[],d=0;d<W.length;d++){if(!s[d]){var K=p.content.cloneNode(!0),V=Array.prototype.slice.call(K.childNodes),Q=[],ve=[];V.forEach(function(A){ye(A,Q,ve)});var tt=d?s[d-1].nodes[s[d-1].nodes.length-1].nextSibling:p.nextSibling;w.insertBefore(K,tt),s[d]={nodes:V,binders:Q,lists:ve}}var Te=Object.create(M);Te[C]=W[d],s[d].binders.forEach(function(A){A(Te)}),s[d].lists.forEach(function(A){A(Te)})}for(;s.length>W.length;)s.pop().nodes.forEach(function(A){A.parentNode&&A.parentNode.removeChild(A)})}}function pe(){this.state={}}var G=null,Fe=!1;pe.prototype.setState=function(p){Object.assign(this.state,p),!Fe&&G&&(Fe=!0,Promise.resolve().then(de))};function de(){Fe=!1;var p=G.comp.renderVals();G.binders.forEach(function(c){c(p)}),G.lists.forEach(function(c){c(p)})}window.DCLogic=pe,window.__mount=function(p){var c=document.getElementById("app");G={comp:new p,binders:[],lists:[]},ye(c,G.binders,G.lists),de(),c.classList.add("ready")}})();class Component extends DCLogic{renderVals(){var k=this.state||{},o=k.t==null?0:k.t,O=!!k.away,ye=k.prio||{},r=this,re=!!k.playing,we=250,et=Math.round(4e3/we);function q(){r._timer&&(clearInterval(r._timer),r._timer=null)}function pe(e){var t=(r._events||[]).filter(function(a){return Math.abs(a.a-e)<1e-6});return t.length?!r.state||r.state.auto!==!1?(r._hold=et,r.setState({t:e}),!0):(r.setState({t:e}),!0):!1}function G(e,t){var a=(r._waiting||[]).filter(function(u){return!t||u.home===t}),l=Object.assign({},r.state&&r.state.taps||{}),n=r.state&&r.state.t||0;return a.forEach(function(u){l[u.home]=(l[u.home]||[]).concat([n])}),Object.assign({taps:l,clicks:(r.state&&r.state.clicks||0)+a.length},e||{})}function Fe(){return{taps:{},tapWin:r.state&&r.state.auto===!1?[[0,1e9]]:[]}}function de(e,t){var a=r.state&&r.state.t||0,l=!!r.state&&r.state.auto===!1,n=(r.state&&r.state.tapWin||[]).map(function(v){return v.slice()}),u=r.state&&r.state.taps||{};if(e>a)n.forEach(function(v){v[1]>a&&(v[1]=a+.001)}),l&&n.push([e,1e9]);else if(e<a){n=n.filter(function(v){return v[0]<=e});var h={};Object.keys(u).forEach(function(v){h[v]=u[v].filter(function(_){return _<=e})}),u=h;var g=n[n.length-1];l?!g||g[1]<=e?n.push([e,1e9]):g[1]=1e9:g&&g[1]>e&&(g[1]=e+.001)}r.setState(Object.assign({t:e,tapWin:n,taps:u},t||{}))}function p(){q();var e=o>=336?0:o;r._hold=0,e===0&&r.setState(Object.assign({homeAt:null,leaveAt:r.state&&r.state.away?0:null},Fe())),r.setState({t:e,playing:!0}),r._timer=setInterval(function(){if(r._hold>0){r._hold--,r.setState({holdLeft:r._hold});return}for(var t=r.state&&r.state.t!=null?r.state.t:e,a=r._events||[],l=a.some(function(g){return g.a<=t+1&&g.b>t}),n=(r._waiting||[]).length?.1:(l?.25:t<48?.5:1.5)*we/150,u=Math.min(336,t+n),h=0;h<a.length;h++)if(a[h].a>t&&a[h].a<=u){pe(a[h].a);return}u>=336?(q(),r.setState({t:336,playing:!1})):r.setState({t:u})},we),e===0&&pe(0)}var c=k.auto==null?!0:!!k.auto,C=k.clicks||0,w=!1;try{w=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}r._started||(r._started=!0,w||setTimeout(function(){r._timer||p()},700));var s=8.16,M=16,W=5.1/16;function d(e){if(e<1)return Math.max(5,Math.round(e*60/5)*5)+" minutes";if(e<48)return Math.round(e)+(Math.round(e)===1?" hour":" hours");var t=Math.round(e/24*10)/10;return t+" days"}var K=18+o,V=Math.floor(K/24),Q=K%24,ve=Math.round(Q%1*60);ve===60&&(ve=0);var tt=(Math.floor(Q)+11)%12+1,Te=Q<12?"AM":"PM",A=tt+":"+(ve<10?"0":"")+ve+" "+Te,Vt=(V?"Day "+(V+1)+", ":"")+A,Ce=Q>=20||Q<7,bt=!Ce&&(Q>=17||Q<8),$t=Ce?"#0E1A2B":bt?"#2C3E58":"#5F7C9A",je=[[0,"storm"],[11,"gusty"],[19,"heavysnow"],[34,"flurries"],[41,"freezing"],[50,"gray"],[61,"drizzle"],[75,"rain"],[92,"hail"],[96,"rain"],[107,"gray"],[138,"snow"],[160,"freezing"],[166,"gray"],[190,"drizzle"],[206,"rain"],[231,"gray"],[262,"hail"],[265,"rain"],[280,"gray"],[310,"drizzle"]];function Me(e){for(var t=je[0][1],a=0;a<je.length;a++)e>=je[a][0]&&(t=je[a][1]);return t}function kt(e){for(var t=e;t>=e-24;t-=1){var a=Me(t);if(a==="snow"||a==="heavysnow"||a==="flurries"||a==="freezing")return!0}return!1}for(var Ut={heavysnow:.8,snow:.35,flurries:.1,hail:.05,rain:-.3,drizzle:-.15,freezing:-.05,gray:-.03,storm:-.3,gusty:-.3},nt=[0],Be=1;Be<=400;Be++)nt[Be]=Math.max(0,nt[Be-1]+Ut[Me(Be-1)]);function at(e){return nt[Math.max(0,Math.min(400,Math.floor(e)))]}var Zt={storm:["Windstorm, heavy rain","gale","precip rain",.9],gusty:["Gusty, steady rain","gusty","precip rain",.6],rain:["Cold rain","gusty","precip rain light",.45],snow:["Snow, icy driveway","","precip snow",.9],hail:["Hail showers","gusty","precip hail",.8],gray:["Cold and gray","","precip",0],flurries:["Snow flurries","","precip snow",.45],heavysnow:["Heavy snow","gusty","precip snow heavy",1],freezing:["Freezing rain: ice on everything","gusty","precip rain light",.55],drizzle:["Drizzle","","precip rain light",.3]},T=Me(o),Ge=Zt[T],De=Ge[0],qt=Ge[1],Xt=Ge[2],Yt=.5+.25*Math.sin(o*1.7)+.25*Math.sin(o*.63+1),Kt=Math.round(Ge[3]*.55*(.75+.25*Yt)*100)/100,yt=T==="hail"||kt(o),Qt=yt?"1":"0",oe=at(o);yt&&["snow","heavysnow","hail","freezing"].indexOf(T)<0&&(De=De+", icy driveway"),oe>=1&&(De=De+" \xB7 "+Math.round(oe)+" in of snow");for(var wt=Math.min(11,oe*.9),Jt=oe>=1?"1":"0",Ft=T==="storm",en="clouds"+(T==="storm"||T==="gusty"?" fast":""),tn={storm:.95,gusty:.8,rain:.7,snow:.75,hail:.85,gray:.8,flurries:.6,drizzle:.65,heavysnow:.95,freezing:.8}[T],nn="flash"+(Ft?" on":""),an="bolt"+(Ft?" on":""),rn=12+Math.floor(o*3)*37%70+"%",on={storm:"-24deg",gusty:"-16deg",rain:"-8deg",drizzle:"-4deg",freezing:"-10deg",hail:"-14deg"}[T]||"-10deg",sn="debris",Un=Me(Math.max(0,o-3)),ln=!Ce&&!bt,un=T==="drizzle"?"0.35":"0",Ct="0",hn=T==="gray"||T==="drizzle"||T==="flurries",fn=hn?Ce?"0.85":"0.55":"0",gn=Ce?"radial-gradient(circle at 65% 35%, transparent 52%, #F3F0DA 54%)":"radial-gradient(circle, #FFF4C2 0 55%, rgba(255,244,194,0) 72%)",cn=Ce?"none":"0 0 30px 10px rgba(255,240,180,.35)",pn=oe<1&&/rain|drizzle|storm|gusty/.test(T)?"0.7":"0",dn="none",Mt=oe>=6&&ln?"1":"0",rt=null,Le=0;Le<=o;Le++){var Et=(18+Le)%24;if(at(Le)>=6&&Et>=8&&Et<17){rt=Le;break}}rt!==null&&o>=rt&&oe>=3&&(Mt="1");var vn=oe>=1||T==="snow"||T==="heavysnow"||T==="flurries"?"#E8EEF4":T==="hail"?"#B9C6D3":"#3E6B45";function mn(e){if(!e||e.kind==="trip"&&!1)return!1;var t=Me(e.a),a=Math.floor(e.a*4);return t==="hail"||kt(e.a)?a%2===0:t==="storm"||t==="rain"||t==="gusty"?a%5===2:!1}var Ve="#F3F5F8",bn="rgba(243,245,248,0.45)",ne=[{k:"gas",short:"Gasoline portable",how:"Roll out, keep refilling",name:"Gasoline portable",model:"Honda EU7000iS",accent:"#D9711A",installed:6770,gen:"gas",batt:!1,move:"Roll out a 263 lb generator",noise:"52-58 dB"},{k:"batt",short:"Battery",how:"Plug in; drains overnight",name:"Battery",model:"Anker SOLIX F3800 Plus",accent:"#0E8F7E",installed:4340,gen:"none",batt:!0,move:"Nothing, if it stays parked by the plug",noise:"Silent"},{k:"combo",short:"Battery + gasoline",how:"Plug in, later refill",name:"Battery + gasoline",model:"Anker battery + Honda",accent:"#7A52C2",installed:10190,gen:"gas",batt:!0,move:"A 263 lb generator, once the battery dies",noise:"Silent, then 52-58 dB"},{k:"ngp",short:"Nat-gas portable",how:"Roll out; oil every 8 h",name:"Natural-gas portable",model:"Westinghouse WGen9500TFc",accent:"#2F5BD3",installed:4600,gen:"ngp",batt:!1,move:"Roll out a 215 lb generator, hook up gas",noise:"74 dB"},{k:"ngs",short:"Nat-gas standby",how:"Starts itself; oil daily",name:"Natural-gas standby",model:"Generac 10 to 14 kW, installed outside",accent:"#1F8A4C",installed:10800,gen:"ngs",batt:!1,move:"Nothing",noise:"61-65 dB"}],kn={gas:.5,batt:.25,combo:.25,ngp:.75},ot=O||k.homeAt!=null?k.leaveAt||0:1e9,yn=O?1e9:k.homeAt!=null?k.homeAt:1e9;function it(e){var t=((18+e)%24+24)%24;return t>=7&&t<23}function wn(e){return 5+24*Math.floor((e-5)/24)}var Fn=8,St=24,st=6;function Ot(e,t,a){function l(h){return!(h>=e&&h<t)}function n(h){return l(h)?h:t}function u(h){var g=[],v=[],_=[],I=null,U=null,R=function(){return{dark:g,chores:v,gasRuns:_,battEnd:I,oilDue:U}},j=a&&a.taps&&a.taps[h.short]||[],le=0;function ae(b){if(!a||!a.wins)return!1;for(var H=0;H<a.wins.length;H++)if(b>=a.wins[H][0]-1e-6&&b<a.wins[H][1])return!0;return!1}function P(b,H,L,N,Y,z,Oe,Re){var Z=b,te=!1;if(L!=="pack"&&ae(b)&&l(b)){var ge=j[le];ge!=null&&ge<=a.t+1e-6?(le++,Z=Math.max(b,ge)):b<=a.t+1e-6&&(Z=a.t,te=!0)}var ce=Math.round(at(Z)),Qe=Me(Z);return ce>=4?z=(L==="trip"?"Dig the car out of "+ce+" in of snow first. ":"Shovel a path through "+ce+" in of snow first. ")+z:Qe==="freezing"&&(z="Everything is glazed in ice. "+z),v.push({a:Z,b:Z+H,due:b,wait:te,kind:L,who:N,text:Y,ask:z,btn:Oe,what:Re||L,home:h.short}),Z}function f(b,H,L,N,Y){var z=P(b,H,"oil",L,N,Y,"Check the oil");return z>b+st&&g.push([b+st,z]),g.push([z,z+H]),z+H}var x=0;if(h.gen==="ngs"){g.push([0,.01]);for(var ue=.01;ue<400;){var D=ue+St;if(!l(D)){if(U=D,t>=1e9)break;D=t}x++,ue=f(D,.5,x%2?"Husband":"Wife","Daily oil check, off 30 minutes",(D>ue+St?"Home from vacation; it ran with nobody checking the oil. ":"")+"Every 24 hours: shut it off for 30 minutes, check and top up the oil, restart.")}return R()}if(h.k==="combo")return Vn();var ee={gas:.5,batt:.25,combo:.25,ngp:.75}[h.k],Ie={gas:["Pushing out the 263 lb generator in the storm","Go out in the storm. Push out the 263 lb generator, plug in, start it."],combo:["Battery dead: out in the dark with the generator","Battery's dead. Go out in the dark, push out the 263 lb generator."],ngp:["Pushing out 215 lb, hooking up gas","Go out in the storm. Push out the 215 lb generator, hook up gas, start it."]}[h.k],F=n(0);if(F>0&&g.push([0,F]),F>=1e9)return R();var X=F>0?"Home from vacation, house dark. ":"";if(h.batt){var _e=P(F,ee,"setup","Wife","Plugging in the battery",X+"Run the cord from the battery to the outside plug and flip the panel switch.","Plug it in","batt");if(g.push([F,_e+ee]),I=_e+ee+s,h.gen==="none")return g.push([I,1e9]),R();if(F=n(I),F>I&&g.push([I,F]),F>=1e9)return R();X=F>I?"Home from vacation; the battery died while you were gone. ":"",ee=.5}var m=0;function ke(b,H){var L=P(b,ee,"setup","Husband",Ie[0],H+Ie[1],"Go outside","gen");return g.push([b,L+ee]),L+ee}F=ke(F,X);for(var he=e;F<400;){var fe=F+(h.gen==="gas"?M:Fn);if(he<1e9&&he<fe&&t>F){var dt=Math.max(he,F);if(he=1e9,h.gen==="gas"&&_.push([F,dt]),P(dt,.25,"pack","Husband","Packing it up before leaving","Leaving? It can't run with nobody home. Shut it off, let it cool, unhook it, roll it back in.","Pack it up","gen"),g.push([dt,t]),t>=1e9)break;F=ke(t,"Home from vacation, house dark. ");continue}if(h.gen==="gas"){_.push([F,fe]),m++;var vt=m%4===3,_t=0;if(m>=3&&m%2===1){var It=vt?2.5:1.5;_t=P(fe-(vt?4:3),It,"trip","Wife",vt?"Nearest station had no power; driving farther":"Driving out for gas, if a station has power","Gas cans are empty. The husband doesn't drive anymore, so the wife goes, in this weather, hoping a station has power.","Drive to the station")+It}var Rt=P(Math.max(fe,_t),.25,"refill",m%2?"Husband":"Wife","Refilling and checking oil, engine off","Tank almost empty. Go out, shut it off, let it cool, refill, check the oil.","Go refill it");g.push([fe,Rt+.25]),F=Rt+.25}else x++,F=f(fe,.25,x%2?"Husband":"Wife","Oil check, engine off","Every 8 hours: go out, shut it off, check and top up the oil, restart.")}return R();function Vn(){var b=n(0);if(b>0&&g.push([0,b]),b>=1e9)return R();var H=b>0?"Home from vacation, house dark. ":"",L=P(b,.25,"setup","Wife","Plugging in the battery",H+"Run the cord from the battery to the outside plug and flip the panel switch.","Plug it in","batt");L>b&&g.push([b,L+.25]);for(var N=e,Y=Ie(L+.25,"Push out the 263 lb generator and connect it to the battery. After this, the phone app starts and stops it.",L+.25+s),z=0;Y<400;){for(var Oe=N<1e9&&t>Y?Math.max(N,Y):400,Re=!1,Z=0;Z<18;Z++){var te=-11+24*Z,ge=Math.min(5+24*Z,Oe);if(te>=Oe)break;if(Re){Re=!1;continue}var ce=Math.max(te,Y);if(te>Y){z++;var Qe=0;z>=3&&z%2===1&&te-18>Y&&(Qe=P(te-18,1.5,"trip","Wife","Driving out for gas, if a station has power","Gas cans are empty. The husband doesn't drive anymore, so the wife goes, hoping a station has power.","Drive to the station")+1.5);var Ae=P(Math.max(te,Qe),.25,"refill",z%2?"Husband":"Wife","Morning refill and oil check; the battery covers","Morning: go out, refill the generator and check the oil. The battery keeps the house on meanwhile.","Go refill it"),jt=te-8+s;if(Ae>jt&&g.push([jt,Ae+.25]),ce=Math.max(ce,Ae),Ae>=ge){var Gt=Math.min(ge+24,Oe);Gt>Ae&&_.push([Ae,Gt]),Re=!0;continue}}ge>ce&&_.push([ce,ge])}if(Oe>=400)break;P(N,.25,"pack","Husband","Packing up the generator before leaving","Leaving? The generator can't run with nobody home. Shut it off, unhook it, roll it back in. The battery stays plugged in.","Pack it up","gen");var $n=it(N)?s:Math.max(0,s-(N-wn(N))),Je=N+$n;if(t>=1e9){g.push([Je,1e9]);break}Je<t&&g.push([Je,t]),Y=Ie(t,"Home from vacation. Push the generator back out and connect it to the battery.",Math.max(t,Je)),N=1e9}return R()}function Ie(b,H,L){var N=P(b,.5,"setup","Husband","Pushing out the 263 lb generator",H,"Go outside","gen");return N>L&&g.push([L,N+.5]),N+.5}}return{plan:u,present:l}}var Cn=k.tapWin&&k.tapWin.length?{taps:k.taps||{},wins:k.tapWin,t:o}:null,At=Ot(ot,yn,Cn),Mn=At.plan,Pe=At.present;function En(e){var t=Mn(e),a={on:!0,covered:o,refills:0,gal:0,trips:0,chore:null,plan:t,waiting:[]};a.darkSince=null,t.dark.forEach(function(n){n[0]<=o&&o<n[1]&&(a.on=!1,a.darkSince=a.darkSince==null?n[0]:Math.min(a.darkSince,n[0])),a.covered-=Math.max(0,Math.min(o,n[1])-n[0])}),o===0&&e.gen!=="ngs"&&(a.on=!1),a.covered=Math.max(0,a.covered),t.chores.forEach(function(n){if(n.wait){a.waiting.push(n);return}n.a<=o&&(a.trips++,n.kind==="refill"&&a.refills++),n.a<=o&&o<n.b&&(a.chore=n)});var l=0;return t.gasRuns.forEach(function(n){l+=Math.max(0,Math.min(o,n[1])-n[0])}),a.gal=Math.round(l*W),a}function Sn(e,t){var a=e.map(function(n){return[Math.max(0,n[0]),Math.min(t,n[1])]}).filter(function(n){return n[1]-n[0]>.02}).sort(function(n,u){return n[0]-u[0]}),l=[];return a.forEach(function(n){var u=l[l.length-1];u&&n[0]<=u[1]+.01?u[1]=Math.max(u[1],n[1]):l.push([n[0],n[1]])}),l}function On(e,t){var a=Sn(e,t),l=0,n=0;return a.forEach(function(u){l=Math.max(l,u[1]-u[0]),u[1]>=t-.01&&(n=u[1]-u[0])}),{fridgeLost:l>=4,freezerLost:l>=48,cur:n,longest:l}}var lt=[],ie={gas:[203.4,46,2.2,11,"M204.5 12L196.5 27H200.5L193 39H198L190.5 50H218.5L211 39H216L208.5 27H212.5Z","#1F5A36","M204.5 12L208.5 27H212.5L205 27Z","v4"],batt:[202,37,5,20,"M189 33a8 8 0 0 1 9-10a9 9 0 0 1 15 0a8 8 0 0 1 8 10a7 7 0 0 1-6 8h-20a7 7 0 0 1-6-8Z","#2C5E38","M200 41h15a7 7 0 0 0 6-8a8 8 0 0 1-4 5h-17Z","v3"],combo:[202.6,39,3.8,18,"M192.5 30a12 12 0 1 0 24 0a12 12 0 1 0-24 0Z","#2F6B3F","M204.5 42a12 12 0 0 0 12-12a10 10 0 0 1-12 9Z","v1"],ngp:[203.5,43,2.6,14,"M198.6 27a6.2 17 0 1 0 12.4 0a6.2 17 0 1 0-12.4 0Z","#3A7D4B","M204.8 44a6.2 17 0 0 0 6.2-17a5 15 0 0 1-6.2 14Z","v2"],ngs:[203.2,45,3,12,"M195 38a9.5 7.5 0 1 0 19 0a9.5 7.5 0 1 0-19 0Z","#4C8A45","M204.5 45.5a9.5 7.5 0 0 0 9.5-7.5a8 6 0 0 1-9.5 5Z","v5"]},J={k:"none",at:1e9},me={},ut={},E=[];ne.forEach(function(e){ut[e.k]=En(e),E=E.concat(ut[e.k].waiting)}),E.sort(function(e,t){return e.due-t.due}),r._waiting=E;var $e=ne.map(function(e){var t=ut[e.k];t.plan.chores.forEach(function(m){m.wait||(lt.push(m),m.kind==="trip"&&lt.push({a:m.b-.5,b:m.b,kind:"tripback",home:e.short,who:"Wife",ask:"Fill the cans, lift about 60 lb of gas into the car, drive home in this weather.",btn:"Drive home"}))});var a;o===0?a=e.gen==="ngs"?"Starts by itself in about 30 seconds":O?"Nobody home to set it up":"Waiting for someone to set it up":e.gen!=="ngs"&&ot===0&&!Pe(o)?a="Dark: nobody home to set it up":t.on?a="Power the whole "+d(o):a="Dark for the last "+d(o-t.covered);var l;e.gen==="ngs"||e.gen==="ngp"?l="Never: house gas line":e.gen==="none"?l="Can't: no way to recharge":t.gal>0?l=t.refills+(t.refills===1?" refill, ":" refills, ")+t.gal+" gal burned so far":l="Every 6 to 16 hours";var n=t.chore,u,h="#14532D",g=t.on||t.darkSince==null?0:o-t.darkSince,v=On(t.plan.dark,o),_=!!n&&mn(n)&&!t.waiting.length&&(n.kind!=="trip"||o<n.a+.5);if(t.waiting.length){var I=t.waiting[0],U=o-I.due;u=I.kind==="oil"&&U>st?"Oil unchecked "+d(U)+": it shut itself off":"Needs the "+I.who.toLowerCase()+(U>=.25?" \xB7 "+(U<1?Math.round(U*60)+" min":d(U))+" late":" outside"),h=t.on?"#B4480C":"#9B1C1C"}else if(n)u=_?n.who+" slipped outside; caught "+(n.who==="Wife"?"herself":"himself"):n.who+": "+n.text.charAt(0).toLowerCase()+n.text.slice(1),h="#B4480C";else if(!Pe(o)&&!t.on)u="Dark: away on vacation",h="#9B1C1C";else if(e.gen==="ngs"&&!Pe(o))u=t.plan.oilDue!=null&&o>t.plan.oilDue?"Nobody home: oil unchecked "+d(o-t.plan.oilDue+24):"Nobody home: running",h=t.plan.oilDue!=null&&o>t.plan.oilDue?"#B4480C":"#14532D";else if(Pe(o))e.gen==="ngs"?u=o<.01?"Starting by itself":"Running on its own":!t.on&&g>=12?(u="Dark and cold: no heat for "+d(g),h="#9B1C1C"):!t.on&&g>=4?(u="Dark and getting cold",h="#9B1C1C"):t.on?u=e.k==="combo"&&!it(o)?"Running on the battery overnight":e.batt&&o<(t.plan.battEnd||0)?"Running on the battery":"Running":(u="Dark: nothing left to run",h="#9B1C1C");else{var R=t.plan.dark.filter(function(m){return m[0]>o}).map(function(m){return m[0]}).sort(function(m,ke){return m-ke})[0];u=R!=null&&R<1e9?"Nobody home: goes dark in "+d(R-o):"Nobody home"}var j=n?{trip:"Out for gas",refill:"Refilling",oil:"Oil check",pack:"Packing up"}[n.kind]||"Outside":null,le=t.plan.chores.filter(function(m){return(m.kind==="setup"&&m.what==="gen"||m.kind==="pack")&&m.a<=o}).pop(),ae=!!le&&le.kind==="setup",P=e.batt&&t.plan.battEnd!=null&&o<t.plan.battEnd,f=e.batt&&t.plan.chores.some(function(m){return m.what==="batt"&&m.b<=o})&&(P||e.gen!=="none"),x=(e.gen==="gas"||e.gen==="ngp")&&ae&&t.on&&!P&&!(e.k==="combo"&&!it(o)),ue=t.on?e.gen==="ngs"?2:x?e.gen==="ngp"?3:1:0:0,D=t.waiting.length>0,ee=D,F=!1;D&&(n=null);var X=n&&n.kind==="trip"?o<n.a+.5?"out":o>=n.b-.5&&!F?"back":"away":"",_e=e.gen==="ngs";return{smokeOp:t.on?"1":"0",candleOp:!t.on&&Pe(o)&&o>.3?"1":"0",cordOp:x?"1":"0",hoseOp:e.gen==="ngp"&&ae?"1":"0",battCordOp:e.batt&&f?"1":"0",noiseX:e.gen==="ngs"?"64":"157",n1:ue>=1?"1":"0",n2:ue>=2?"1":"0",n3:ue>=3?"1":"0",fridgeTxt:v.freezerLost?"Fridge + freezer lost":v.fridgeLost?"Fridge food lost":v.cur>.3?"Warming: "+Math.min(4,Math.round(v.cur))+" of 4 h":"Fridge cold",fridgeInk:v.fridgeLost?"#FFFFFF":"#13202E",fridgeBg:v.fridgeLost?"#9B1C1C":v.cur>.3?"#FFC94D":"#BFE3FF",fridgeCard:v.freezerLost?"Fridge and freezer food lost (dark "+d(v.longest)+")":v.fridgeLost?"Fridge food lost (dark "+d(v.longest)+"); freezer OK under 48 h":v.cur>.3?"Warming: safe for about "+d(Math.max(0,4-v.cur))+" more":"Cold and safe",name:e.name,short:e.short,how:e.how,snowmanOp:e.k===dn?Mt:"0",sbOp:e.gen==="ngs"?"1":"0",model:e.model,accent:e.accent,win:t.on?"#FFC94D":g>=12?"#7FA6CF":"#3A4656",outs:(function(){var m=0,ke=0;return t.plan.chores.forEach(function(he){var fe=!he.wait&&he.a<=o;fe&&(he.who==="Husband"?m++:ke++)}),"Husband "+m+" \xB7 Wife "+ke})(),outsInk:e.gen==="ngs"?"#8EE3A8":"#FFB27A",who:n?n.who:"",pColor:n&&n.who==="Wife"?"#F27BC0":"#FF8A3D",trunkX:ie[e.k][0],trunkY:ie[e.k][1],trunkW:ie[e.k][2],trunkH:ie[e.k][3],treeD:ie[e.k][4],treeFill:ie[e.k][5],treeD2:ie[e.k][6],swayCls:ie[e.k][7],leafOp:e.k===J.k&&o>=J.at?"0":"1",bareOp:e.k===J.k&&o>=J.at?"1":"0",shedCls:e.k===J.k&&o>=J.at-.5&&o<J.at+2?"shed on":"shed",treeCls:me[e.k]!=null&&o>=me[e.k]?"uproot":"",stumpOp:me[e.k]!=null&&o>=me[e.k]?"1":"0",rowBg:ee?"rgba(255,138,61,0.28)":"rgba(255,255,255,0.07)",rowRing:ee?"inset 0 0 0 2px #FF8A3D":"none",litWord:D?"Needs you":j||(e.gen==="ngs"&&o<.01?"Starting":t.on?"On":"Dark"),aria:e.short+": "+u,now:u,nowInk:h,carOp:n&&n.kind==="trip"?"0":"1",tripOp:X==="away"?"1":"0",glowOp:t.on&&!n?"0.45":"0",genCls:n&&n.kind==="setup"&&n.what==="gen"?"g-push":n&&n.kind==="pack"?"g-pack":"",battCls:"",carCls:X==="out"?"c-drive":X==="away"?"c-gone":X==="back"?"c-back":"",personCls:!n||D?"":n.kind==="trip"?X==="back"?"p-home":X==="out"?"p-trip":"":n.kind==="oil"&&e.gen==="ngs"?"p-batt":n.kind==="refill"||n.kind==="oil"?"p-refill":n.what==="batt"?"p-batt":"p-gen",battOp:e.batt?"1":"0",canOp:n&&n.kind==="refill"?"1":"0",slipCls:_&&n?"slip":"",whoaOp:_&&n?"1":"0",genOp:e.gen==="none"||e.gen==="ngs"?"0":n&&n.what==="gen"||ae&&!(e.batt&&o<(t.plan.battEnd||0))?"1":"0.15",personOp:n&&!D&&X!=="away"?"1":"0",ring:t.on?"#FFC94D":"#E5484D",ringBg:t.on?"#FFF4D6":g>=12?"#1F3550":"#2A3442",houseInk:t.on?"#13202E":"#9AA6B4",wordBg:D||j?"#FF8A3D":t.on?"#FFC94D":"#B42318",wordInk:D||j||t.on?"#13202E":"#FFFFFF",barPct:(o>0?Math.round(t.covered/o*100):t.on?100:0)+"%",cover:a,move:e.move,refuel:l,trips:t.trips===0?"None":String(t.trips),noise:t.on?e.noise:"Quiet: nothing running",installed:"~$"+e.installed.toLocaleString("en-US"),priceNote:{ngp:"installed ($3,500 to $7,300)",ngs:"installed, Seattle-area quotes ($8,500 to $13,000)"}[e.k]||"installed",badge:_e?"Starts itself":"Someone goes outside",badgeBg:_e?"#FFF4D6":"#FF8A3D",badgeInk:"#13202E",outline:"none",wordDisp:D?"none":"inline-block",tapDisp:D?"inline-block":"none",tapLabel:D?t.waiting[0].btn:"",tapAria:D?e.short+": "+t.waiting[0].btn:"",tap:function(){r.setState(G(null,e.short))}}});r._events=lt.filter(function(e){return!0}).sort(function(e,t){return e.a-t.a});var Ue=E.map(function(e){return e.home}).filter(function(e,t,a){return a.indexOf(e)===t}),S=$e.filter(function(e){return e.personOp==="1"||e.carOp==="0"}),Tt=k.holdLeft||0,Ze="";if(!E.length&&re&&c&&Tt>0&&S.length){var An=Math.max(1,Math.ceil(Tt*we/1e3));Ze=(S.length===1?S[0].short+": "+S[0].now.charAt(0).toLowerCase()+S[0].now.slice(1):S.length+" homes have someone outside")+". Continues in "+An+" s."}var B,Ee=ne.filter(function(e){return me[e.k]!=null&&o>=me[e.k]&&o<me[e.k]+1.5})[0];!S.length&&Ee?B=A+". The wind just knocked over the tree in the "+Ee.short+" yard.":S.length===1?B=A+". "+S[0].short+" home: "+S[0].now.charAt(0).toLowerCase()+S[0].now.slice(1)+(S[0].short==="Nat-gas standby"?".":". The standby: nothing to do right now."):S.length>1?B=A+". "+S.length+" of 5 homes have someone outside in the storm ("+S.map(function(e){return e.short}).join(", ")+"). The standby starts by itself.":O&&ot>0?B="On vacation. The portable generators had to be packed up before leaving, and the battery drains on its own. Only the standby keeps the lights on, with nobody checking its oil.":O?B=o===0?"You're on vacation when it hits. Only the standby starts; everything else is still in the garage.":"On vacation for "+d(o)+". The standby has kept the house running on its own. Every other home has been dark the whole time.":o===0?B="6 PM: the power goes out. The standby starts by itself. Everything else waits for someone to go outside, roll it out and plug it in.":o<kn.ngp+.25?B="Every home except the standby needed someone outside in the storm just to get the lights back on.":o<s?B="Everything is running. The battery is silent, the generators are not.":o<16?B="Overnight, the battery runs out. With battery + gasoline, someone now rolls out the generator in the dark.":o<48?B="The next day. The gasoline generators need refilling every 6 to 16 hours, after the engine cools.":o<144?B="Day "+(V+1)+". In the November 2024 bomb cyclone, many homes here were still out after a week.":B="Day "+(V+1)+". Gasoline portable: "+Math.round(o*W)+" gallons fetched and carried so far. Natural gas: no refills at all.";var Zn=$e.filter(function(e){return e.short==="Battery"})[0],qe=s+.25;!S.length&&!Ee&&!O&&o>=qe+4&&o<qe+6?B=A+". The battery house has been dark 4 hours. A closed fridge keeps food safe about 4 hours without power (USDA), and their gas furnace can't run without electricity.":!S.length&&!Ee&&!O&&o>=qe+12&&o<qe+14&&(B=A+". 12 hours dark at the battery house: no heat since early morning. The windows are frosting over."),!S.length&&!Ee&&!O&&Ct==="1"&&(B=A+". The rain lets up and a rainbow comes out. The power is still off.");var Tn=ne.filter(function(e){return e.k===J.k})[0];!S.length&&!Ee&&!O&&o>=J.at&&o<J.at+1.5&&(B=A+". The wind just stripped every leaf off the tree in the "+Tn.short+" yard.");var Bn=[["6 PM",0],["8 hours",8],["1 day",24],["2 days",48],["1 week",168],["2 weeks",336]].map(function(e){var t=o===e[1];return{label:e[0],bg:t?"#F3F5F8":"transparent",ink:t?"#13202E":Ve,pick:function(){q(),de(e[1],{playing:!1})}}}),y=k.sb||{k:"gas",T:168,home:"home"},Bt={home:[1e9,1e9,"Home"],start:[0,1e9,"Away"],mid:[24,96,"Away days 2\u20134"]};function Dn(e){var t=(18+e)%24;return t>=20||t<7}function Ln(e){return Dn(e)}function ht(e,t,a){var l=Bt[a],n=ne.filter(function(f){return f.k===e})[0],u=Ot(l[0],l[1]).plan(n),h=u.chores.filter(function(f){return f.a<t}),g=h.filter(function(f){return f.who==="Husband"}).length,v=h.length-g,_=h.filter(function(f){return Ln(f.a)}).length,I=h.filter(function(f){return f.kind==="trip"}).length,U=0;u.gasRuns.forEach(function(f){U+=Math.max(0,Math.min(t,f[1])-f[0])});var R=u.dark.map(function(f){return[Math.max(0,f[0]),Math.min(t,f[1])]}).filter(function(f){return f[1]-f[0]>.02}).sort(function(f,x){return f[0]-x[0]}),j=[];R.forEach(function(f){var x=j[j.length-1];x&&f[0]<=x[1]+.01?x[1]=Math.max(x[1],f[1]):j.push([f[0],f[1]])});var le=0,ae=0;j.forEach(function(f){le+=f[1]-f[0],ae=Math.max(ae,f[1]-f[0])});var P=j.filter(function(f){return f[1]-f[0]>=4}).length;return{spoil:P,d:n,chores:h,n:h.length,husband:g,wife:v,hard:_,runs:I,gal:Math.round(U*W),darkH:le,longest:ae,dark:j}}function se(e){return e<1?e<.05?"none":"under 1 h":e<48?Math.round(e)+" h":Math.round(e/24*10)/10+" days"}var i=ht(y.k,y.T,y.home),ft=ht("ngs",y.T,y.home),be={24:"1 day",72:"3 days",168:"1 week",336:"2 weeks"}[y.T],Pn={gas:"Gasoline",batt:"Battery",combo:"Battery + gas",ngp:"Nat-gas portable",ngs:"Nat-gas standby"},Hn=ne.map(function(e){var t=y.k===e.k;return{label:Pn[e.k],bg:t?"#13202E":"#FFFFFF",ink:t?"#FFFFFF":"#13202E",pressed:t?"true":"false",accent:e.accent,pick:function(){r.setState({sb:Object.assign({},y,{k:e.k})})}}}),Nn=[[24,"1 day"],[72,"3 days"],[168,"1 week"],[336,"2 weeks"]].map(function(e){var t=y.T===e[0];return{label:e[1],bg:t?"#13202E":"#FFFFFF",ink:t?"#FFFFFF":"#13202E",pressed:t?"true":"false",pick:function(){r.setState({sb:Object.assign({},y,{T:e[0]})})}}}),zn=["home","start","mid"].map(function(e){var t=y.home===e;return{label:Bt[e][2],bg:t?"#13202E":"#FFFFFF",ink:t?"#FFFFFF":"#13202E",pressed:t?"true":"false",pick:function(){r.setState({sb:Object.assign({},y,{home:e})})}}}),He=y.home==="home"?"at home":y.home==="start"?"away the whole time":"away days 2 to 4",Xe;i.d.k==="ngs"?Xe=be+", "+He+": the standby is never dark longer than "+(i.longest<=.6?"30 minutes":se(i.longest))+". "+(i.n?"Its only chore is a short oil check about once a day ("+i.n+" in all).":y.T<=24?"Nothing to do in the first day.":"")+(y.home!=="home"&&y.T>24?" While nobody is home, nobody checks the oil; Generac advises a check every 24 hours in long outages.":""):i.n===0?Xe=be+", "+He+": nobody can set it up, so the house is dark the whole time"+(i.spoil?" and the fridge food is lost"+(i.longest>=48?", freezer too.":"."):"."):(i.d.k,Xe=be+", "+He+": "+i.n+(i.n===1?" trip":" trips")+" outside"+(i.hard?", "+i.hard+" of them at night":"")+(i.runs?", and "+i.runs+" drive"+(i.runs>1?"s":"")+" for gas by the wife":"")+(i.darkH<.05?". Never dark":". Dark for "+se(i.darkH)+" in all")+(i.spoil?", and the fridge food is lost.":"; the fridge stays cold."));var Wn=[["Trips outside",String(i.n),"Husband "+i.husband+" \xB7 Wife "+i.wife],["At night (8 PM to 7 AM)",String(i.hard),i.n?Math.round(i.hard/i.n*100)+"% of trips":"none"],["Gas runs (wife drives; this storm, illustrative)",String(i.runs),i.gal?i.gal+" gal burned":"no gasoline"],["Hours dark",se(i.darkH),"of "+be],["Fridge food",i.spoil?"Lost":"Safe",i.spoil?i.longest>=48?"freezer too: dark "+se(i.longest)+" (USDA: 4 h fridge, 48 h full freezer)":"dark "+se(i.longest)+" at once; USDA says 4 h":"never dark 4 h at once"],["Longest without heat",se(i.longest),i.longest>=4?"gas furnace needs power to run":"furnace keeps running"],["Installed","~$"+i.d.installed.toLocaleString("en-US"),{ngp:"range $3,500 to $7,300",ngs:"Seattle-area range $8,500 to $13,000"}[i.d.k]||"electrician hookup included"]].map(function(e){return{label:e[0],value:String(e[1]).replace("under 1 h","<1 h"),sub:e[2]}}),gt=i.n-ft.n,Ye={gas:[6770,6770],batt:[4340,4340],combo:[10190,10190],ngp:[3470,7350],ngs:[8500,13e3]};function Se(e){return"$"+(Math.round(e/100)*100).toLocaleString("en-US")}function Dt(e){var t=Ye.ngs[0]-Ye[e][1],a=Ye.ngs[1]-Ye[e][0];return a<=0?"about "+Se(-a)+" to "+Se(-t)+" less":t>=0?"about "+Se(t)+" to "+Se(a)+" more":"from "+Se(-t)+" less to "+Se(a)+" more"}var xn=i.d.k==="ngs"?"This is the standby.":"Compared with the standby: "+(gt>=0?gt+" more trips outside":-gt+" fewer trips")+", "+(i.darkH-ft.darkH<1?"about the same time in the dark":se(i.darkH-ft.darkH)+" more in the dark")+". The standby costs "+Dt(i.d.k)+" to install.",Ke=[],Ne=0,ze=function(e){return(e/y.T*100).toFixed(2)+"%"};i.dark.forEach(function(e){e[0]>Ne&&Ke.push("#FFC94D "+ze(Ne)+" "+ze(e[0])),Ke.push("#1C2A3C "+ze(e[0])+" "+ze(e[1])),Ne=e[1]}),Ne<y.T&&Ke.push("#FFC94D "+ze(Ne)+" 100%");var Lt=i.chores.map(function(e){var t=e.a/y.T*100;return"transparent "+Math.max(0,t-.25).toFixed(2)+"%, #FF8A3D "+Math.max(0,t-.25).toFixed(2)+"% "+(t+.25).toFixed(2)+"%, transparent "+(t+.25).toFixed(2)+"%"}),_n=(Lt.length?"linear-gradient(to right, "+Lt.join(", ")+"), ":"")+"linear-gradient(to right, "+Ke.join(", ")+")";r._sbCache=r._sbCache||{};function Pt(e,t,a){var l=e+"|"+t+"|"+a;return r._sbCache[l]||(r._sbCache[l]=ht(e,t,a)),r._sbCache[l]}var $={},Ht={},ct=1;ne.forEach(function(e){$[e.k]=Pt(e.k,y.T,y.home),Ht[e.k]=Pt(e.k,y.T,"start"),ct=Math.max(ct,$[e.k].n)});var Nt={move:{gas:0,batt:1,combo:0,ngp:0,ngs:1},quiet:{batt:1,gas:.75,combo:.875,ngs:.5,ngp:.25}},In={lights:function(e){return 1-Math.min(1,$[e].darkH/y.T)},fewest:function(e){return 1-$[e].n/ct},refuel:function(e){return $[e].chores.some(function(t){return t.kind==="refill"||t.kind==="trip"})?0:1},away:function(e){return 1-Math.min(1,Ht[e].darkH/y.T)},move:function(e){return Nt.move[e]},quiet:function(e){return Nt.quiet[e]}},zt=[["lights","Lights stay on"],["fewest","Fewest trips outside"],["refuel","No refueling"],["away","Works while they're away"],["move","Nothing to move"],["quiet","Quietest"]],Rn=zt.map(function(e){var t=!!ye[e[0]];return{label:e[1],pressed:t?"true":"false",bg:t?"#13202E":"#FFFFFF",ink:t?"#FFFFFF":"#13202E",pick:function(){var a=Object.assign({},ye);a[e[0]]?delete a[e[0]]:a[e[0]]=!0,r.setState({prio:a})}}}),pt=zt.filter(function(e){return ye[e[0]]}).map(function(e){return e[0]}),jn=ne.slice().sort(function(e,t){return $[e.k].darkH-$[t.k].darkH||$[e.k].n-$[t.k].n}),Wt="Tap what matters to you to rank the five options.",xt="For "+be+", "+He+", by time dark, then trips outside: "+jn.map(function(e){return e.name+" ("+($[e.k].darkH<.05?"never dark":se($[e.k].darkH)+" dark")+", "+$[e.k].n+" trips)"}).join("  \xB7  ")+'. Scores use this simulation; "Nothing to move" and "Quietest" are judgment calls from the specs.';if(pt.length){var We=ne.map(function(e){var t=0;return pt.forEach(function(a){t+=In[a](e.k)}),{d:e,s:t/pt.length}}).sort(function(e,t){return t.s-e.s}),xe=We[0],Gn=We[1]&&xe.s-We[1].s<.05;Wt=Gn?"Close call: "+xe.d.name+" and "+We[1].d.name:"Best fit: "+xe.d.name,xt=We.map(function(e){return e.d.name+" "+Math.round(e.s*100)+"%"}).join("  \xB7  ")+". Each pick counts equally; scores use this simulation for "+be+", "+He+".",$e.forEach(function(e){e.name===xe.d.name&&(e.outline="3px solid "+xe.d.accent)})}return{t:o,clock:Vt,outFor:o===0?"The power just went out":"Power out "+d(o),weather:De,windCls:qt,rainCls:Xt,rainOp:Kt,groundFill:vn,boltX:rn,rainSkew:on,debrisCls:sn,fogOp:un,rainbowOp:Ct,orbOp:fn,orbBg:gn,orbGlow:cn,puddleOp:pn,snowCover:Jt,snowH:wt.toFixed(1),snowY:(56-wt).toFixed(1),iceOp:Qt,cloudCls:en,cloudOp:tn,flashCls:nn,flashCls2:an,capDisp:E.length||Ze?"none":"block",promptDisp:E.length||Ze?"flex":"none",promptBg:E.length?"#FF8A3D":"rgba(243,245,248,0.12)",promptInk:E.length?"#13202E":"#F3F5F8",promptEdge:E.length?"#13202E":"#F3F5F8",promptBtnDisp:E.length?"inline-block":"none",promptBtnBg:"#13202E",promptBtnInk:E.length?"#FFFFFF":"#13202E",promptAct:E.length?function(){r.renderVals().goOut()}:function(){r.renderVals().togglePlay()},prompt:E.length?Ue.length===1?E[0].home+" \xB7 "+E[0].who+": "+E[0].ask:Ue.length+" homes need someone outside. Each stays dark until you tap; the storm keeps going.":Ze,promptBtn:E.length?Ue.length===1?E[0].btn:"Do all "+Ue.length:"\u275A\u275A Pause",pending:E,goOut:function(){r.setState(G())},outCount:C?"You've gone out "+C+(C===1?" time":" times")+". Standby: 0":"",sky:$t,skyInk:Ve,skyLine:bn,caption:B,presets:Bn,awayLabel:O?"On vacation \u2014 tap to come home":k.homeAt!=null?"Back home \u2014 Reset to try another trip":"Go on vacation",awayCls:O?"":"pulse",autoLabel:c?"Chores: auto":"Chores: I tap",autoAria:c?"Chores: auto. Chores happen on their own. Tap to do them yourself.":"Chores: I tap. Chores wait for your tap while the storm keeps going; a home stays dark until you tap. Tap to let them happen on their own.",autoPressed:c?"true":"false",autoBg:"transparent",autoInk:Ve,reset:function(){q(),r.setState(Object.assign({t:0,away:!1,leaveAt:null,homeAt:null,clicks:0,playing:!1,fly:null},Fe())),setTimeout(function(){var e=r.renderVals();r._timer||e.togglePlay()},60)},toggleAuto:function(){var e=r.state.auto===!1,t=r.state.t||0,a=(r.state.tapWin||[]).map(function(l){return l.slice()});e?(a.forEach(function(l){l[1]>t&&(l[1]=t+.001)}),r.setState(G({auto:!0,tapWin:a}))):(a.push([t,1e9]),r.setState({auto:!1,tapWin:a}))},awayPressed:O?"true":"false",awayBg:O?"transparent":"#FFFFFF",awayInk:O?Ve:"#13202E",toggleAway:function(){var e=r.state.t||0;if(!(!O&&r.state.homeAt!=null)){if(!O){r.setState(G({away:!0,leaveAt:e,homeAt:null})),e>0&&setTimeout(function(){try{r.renderVals()}catch(t){}pe(e)},60);return}r.setState({away:!1,homeAt:e>(r.state.leaveAt||0)?e:null,leaveAt:e>(r.state.leaveAt||0)?r.state.leaveAt||0:null}),setTimeout(function(){try{r.renderVals()}catch(t){}pe(e)},60)}},setT:function(e){q(),de(Number(e.target.value),{playing:!1})},togglePlay:function(){re?(q(),r.setState({playing:!1})):(o>=336&&r.setState({clicks:0}),p())},playLabel:re?"\u275A\u275A Pause":"\u25B6 Play",playPressed:re?"true":"false",playAria:re?"Pause the outage":"Play the outage from now to two weeks",playBg:"#F3F5F8",playInk:"#13202E",opts:$e,chips:Rn,fit:Wt,fitWhy:xt,stageCls:re?"":"paused",headline:i.d.k==="ngs"?"Never dark more than 30 min":i.n===0?"Dark the whole time":i.n+(i.n===1?" trip":" trips")+" outside",sbSetups:Hn,sbLens:Nn,sbHomes:zn,verdict:Xe,tiles:Wn,vsStandby:xn,timeline:_n,tlEnd:be,nudgeVacation:function(){try{window.scrollTo({top:0,behavior:"smooth"})}catch(t){}var e=r.renderVals();q(),de(42,{playing:!1}),setTimeout(function(){var t=r.renderVals();r.state.away||t.toggleAway(),setTimeout(function(){var a=r.renderVals();r._timer||a.togglePlay()},120)},60)},nudgeChores:function(){try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}q(),r.setState({auto:!1}),setTimeout(function(){r.renderVals().reset()},30)},nudgeWeek:function(){try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}q(),de(168,{playing:!1})},delta:Dt("gas").replace(" more","")}}}document.addEventListener("DOMContentLoaded",function(){window.__mount(Component)});
+// Tiny view runtime for the storm test. No innerHTML, no eval: the page's markup is static HTML with data-*
+// hooks; this file fills them from Component.renderVals() and re-renders after each setState.
+//   data-t="path"            text content
+//   data-a-NAME="tpl"        attribute (tpl may mix text and {{path}})
+//   data-style="tpl"         inline style, applied through the CSSOM (allowed by style-src 'self')
+//   data-on-click="path"     click handler; data-on-input likewise
+//   <template data-for="path" data-as="x">  one copy of the template per list item
+(function () {
+  "use strict";
+  var TPL = /\{\{\s*([^}]+?)\s*\}\}/g;
+  function lookup(scope, path) {
+    var parts = path.split("."), v = scope;
+    for (var i = 0; i < parts.length; i++) { if (v == null) return undefined; v = v[parts[i]]; }
+    return v;
+  }
+  function fill(tpl, scope) {
+    return tpl.replace(TPL, function (_, p) { var v = lookup(scope, p); return v == null ? "" : String(v); });
+  }
+  function onlyPath(tpl) { var m = /^\{\{\s*([^}]+?)\s*\}\}$/.exec(tpl); return m ? m[1] : null; }
+
+  // Compile a subtree (not descending into nested templates' content) into a list of binders.
+  function compile(root, binders, lists) {
+    var walker = [root];
+    while (walker.length) {
+      var el = walker.pop();
+      if (el.nodeType !== 1) continue;
+      if (el.tagName === "TEMPLATE" && el.hasAttribute("data-for")) { lists.push(makeList(el)); continue; }
+      var attrs = el.attributes;
+      for (var i = 0; i < attrs.length; i++) {
+        var n = attrs[i].name, v = attrs[i].value;
+        if (n === "data-t") binders.push(textBinder(el, v));
+        else if (n === "data-style") binders.push(styleBinder(el, v));
+        else if (n.indexOf("data-a-") === 0) binders.push(attrBinder(el, n.slice(7), v));
+        else if (n.indexOf("data-on-") === 0) listen(el, n.slice(8), v, binders);
+      }
+      for (var c = el.lastElementChild; c; c = c.previousElementSibling) walker.push(c);
+    }
+  }
+  function textBinder(el, path) {
+    var last;
+    return function (scope) { var v = lookup(scope, path); v = v == null ? "" : String(v); if (v !== last) { el.textContent = v; last = v; } };
+  }
+  function styleBinder(el, tpl) {
+    var last, isStatic = tpl.indexOf("{{") < 0;
+    return function (scope) {
+      if (isStatic && last !== undefined) return;
+      var v = fill(tpl, scope);
+      if (v !== last) { el.style.cssText = v; last = v; }
+    };
+  }
+  function attrBinder(el, name, tpl) {
+    var last;
+    return function (scope) {
+      var v = fill(tpl, scope);
+      if (v === last) return;
+      last = v;
+      if (name === "value" && "value" in el) { if (el.value !== v) el.value = v; }
+      else el.setAttribute(name, v);
+    };
+  }
+  function listen(el, type, path, binders) {
+    var scope = null;
+    binders.push(function (s) { scope = s; });
+    el.addEventListener(type, function (e) { var f = scope && lookup(scope, path); if (typeof f === "function") f(e); });
+  }
+  function makeList(tpl) {
+    var path = onlyPath("{{" + tpl.getAttribute("data-for") + "}}"), as = tpl.getAttribute("data-as");
+    var parent = tpl.parentNode, items = [];
+    return function (scope) {
+      var list = lookup(scope, path) || [];
+      for (var i = 0; i < list.length; i++) {
+        if (!items[i]) {
+          var frag = tpl.content.cloneNode(true), nodes = Array.prototype.slice.call(frag.childNodes), b = [], l = [];
+          nodes.forEach(function (n) { compile(n, b, l); });
+          var anchor = i ? items[i - 1].nodes[items[i - 1].nodes.length - 1].nextSibling : tpl.nextSibling;
+          parent.insertBefore(frag, anchor);
+          items[i] = { nodes: nodes, binders: b, lists: l };
+        }
+        var s = Object.create(scope); s[as] = list[i];
+        items[i].binders.forEach(function (f) { f(s); });
+        items[i].lists.forEach(function (f) { f(s); });
+      }
+      while (items.length > list.length) items.pop().nodes.forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+    };
+  }
+
+  function DCLogic() { this.state = {}; }
+  var app = null, queued = false;
+  DCLogic.prototype.setState = function (patch) {
+    Object.assign(this.state, patch);
+    if (!queued && app) { queued = true; Promise.resolve().then(render); }
+  };
+  function render() {
+    queued = false;
+    var vals = app.comp.renderVals();
+    app.binders.forEach(function (f) { f(vals); });
+    app.lists.forEach(function (f) { f(vals); });
+  }
+  window.DCLogic = DCLogic;
+  window.__mount = function (Component) {
+    var root = document.getElementById("app");
+    app = { comp: new Component(), binders: [], lists: [] };
+    compile(root, app.binders, app.lists);
+    render();
+    root.classList.add("ready");
+  };
+})();
+
+// ---- The storm test's logic, carried over unchanged from the design prototype ----
+class Component extends DCLogic {
+  renderVals() {
+    var st = this.state || {};
+    var t = st.t == null ? 0 : st.t;
+    var away = !!st.away;
+    var prio = st.prio || {};
+    var self = this;
+
+    var playing = !!st.playing;
+    // Playback pace: one redraw every 250 ms (fewer redraws for phones); steps scale so the storm moves at the same speed.
+    var TICK_MS = 250, TICK_HOLD = Math.round(4000 / TICK_MS);
+    function stopPlay() { if (self._timer) { clearInterval(self._timer); self._timer = null; } }
+    function waitAt(a) {
+      var list = (self._events || []).filter(function (e) { return Math.abs(e.a - a) < 1e-6; });
+      if (!list.length) return false;
+      if (!self.state || self.state.auto !== false) { self._hold = TICK_HOLD; self.setState({ t: a }); return true; }
+      self.setState({ t: a });  // "I tap": the storm keeps going; the chore waits for a tap
+      return true;
+    }
+    // Tap every chore that is waiting now (one tap covers all homes). Returns a state patch.
+    function tapNow(extra, home) {
+      var w = (self._waiting || []).filter(function (c) { return !home || c.home === home; }), tp = Object.assign({}, (self.state && self.state.taps) || {}), now = (self.state && self.state.t) || 0;
+      w.forEach(function (c) { tp[c.home] = (tp[c.home] || []).concat([now]); });
+      return Object.assign({ taps: tp, clicks: ((self.state && self.state.clicks) || 0) + w.length }, extra || {});
+    }
+    function freshTaps() { return { taps: {}, tapWin: self.state && self.state.auto === false ? [[0, 1e9]] : [] }; }
+    // Move the clock. Jumping ahead, chores skipped over happen on time; jumping back, later taps are undone.
+    function jumpTo(nt, extra) {
+      var cur = (self.state && self.state.t) || 0, tapOn = !!self.state && self.state.auto === false;
+      var wins = ((self.state && self.state.tapWin) || []).map(function (w) { return w.slice(); }), tp = (self.state && self.state.taps) || {};
+      if (nt > cur) { wins.forEach(function (w) { if (w[1] > cur) w[1] = cur + 0.001; }); if (tapOn) wins.push([nt, 1e9]); }
+      else if (nt < cur) {
+        wins = wins.filter(function (w) { return w[0] <= nt; });
+        var ntp = {}; Object.keys(tp).forEach(function (h) { ntp[h] = tp[h].filter(function (x) { return x <= nt; }); }); tp = ntp;
+        var last = wins[wins.length - 1];
+        if (tapOn) { if (!last || last[1] <= nt) wins.push([nt, 1e9]); else last[1] = 1e9; }
+        else if (last && last[1] > nt) last[1] = nt + 0.001;
+      }
+      self.setState(Object.assign({ t: nt, tapWin: wins, taps: tp }, extra || {}));
+    }
+    function startPlay() {
+      stopPlay();
+      var start = t >= 336 ? 0 : t;
+      self._hold = 0;
+      if (start === 0) self.setState(Object.assign({ homeAt: null, leaveAt: self.state && self.state.away ? 0 : null }, freshTaps()));
+      self.setState({ t: start, playing: true });
+      self._timer = setInterval(function () {
+        if (self._hold > 0) { self._hold--; self.setState({ holdLeft: self._hold }); return; }
+        var cur = (self.state && self.state.t != null) ? self.state.t : start;
+        var ev = self._events || [];
+        var busy = ev.some(function (e) { return e.a <= cur + 1 && e.b > cur; });
+        // While a chore waits for a tap, the clock slows to 0.1 h a tick (a fridge's 4 hours take about 10 s).
+        var step = (self._waiting || []).length ? 0.1 : (busy ? 0.25 : (cur < 48 ? 0.5 : 1.5)) * TICK_MS / 150;
+        var next = Math.min(336, cur + step);
+        for (var i = 0; i < ev.length; i++) {
+          if (ev[i].a > cur && ev[i].a <= next) { waitAt(ev[i].a); return; }
+        }
+        if (next >= 336) { stopPlay(); self.setState({ t: 336, playing: false }); }
+        else self.setState({ t: next });
+      }, TICK_MS);
+      if (start === 0) waitAt(0);
+    }
+    var auto = st.auto == null ? true : !!st.auto;
+    var clicks = st.clicks || 0;
+    var calm = false; try { calm = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (err) {}
+    if (!self._started) { self._started = true; if (!calm) setTimeout(function () { if (!self._timer) startPlay(); }, 700); }
+    var BATT_H = 8.16, TANK_H = 16, GPH = 5.1 / 16;
+    function dur(h) {
+      if (h < 1) return Math.max(5, Math.round(h * 60 / 5) * 5) + " minutes";
+      if (h < 48) return Math.round(h) + (Math.round(h) === 1 ? " hour" : " hours");
+      var d = Math.round(h / 24 * 10) / 10;
+      return d + " days";
+    }
+    var tot = 18 + t, day = Math.floor(tot / 24), hr = tot % 24;
+    var mins = Math.round((hr % 1) * 60); if (mins === 60) mins = 0;
+    var h12 = ((Math.floor(hr) + 11) % 12) + 1, ap = hr < 12 ? "AM" : "PM";
+    var hm = h12 + ":" + (mins < 10 ? "0" : "") + mins + " " + ap;
+    var clock = (day ? "Day " + (day + 1) + ", " : "") + hm;
+    var night = hr >= 20 || hr < 7, dusk = !night && (hr >= 17 || hr < 8);
+    var sky = night ? "#0E1A2B" : (dusk ? "#2C3E58" : "#5F7C9A");
+    // Illustrative weather, not a forecast: a windstorm the first night, then a mix of rain, snow and hail.
+    // Illustrative weather timeline, not a forecast: uneven spells, short hail bursts, a couple of snow days.
+    var TL = [[0, "storm"], [11, "gusty"], [19, "heavysnow"], [34, "flurries"], [41, "freezing"], [50, "gray"], [61, "drizzle"], [75, "rain"], [92, "hail"], [96, "rain"], [107, "gray"], [138, "snow"], [160, "freezing"], [166, "gray"], [190, "drizzle"], [206, "rain"], [231, "gray"], [262, "hail"], [265, "rain"], [280, "gray"], [310, "drizzle"]];
+    function wxAt(h) { var w = TL[0][1]; for (var i = 0; i < TL.length; i++) if (h >= TL[i][0]) w = TL[i][1]; return w; }
+    function snowyNear(h) { for (var x = h; x >= h - 24; x -= 1) { var w = wxAt(x); if (w === "snow" || w === "heavysnow" || w === "flurries" || w === "freezing") return true; } return false; }
+    // Snow on the ground, in inches: heavy snow piles up about a foot, rain melts it, cold days keep most of it.
+    var RATE = { heavysnow: 0.8, snow: 0.35, flurries: 0.1, hail: 0.05, rain: -0.3, drizzle: -0.15, freezing: -0.05, gray: -0.03, storm: -0.3, gusty: -0.3 };
+    var DEPTH = [0];
+    for (var hh = 1; hh <= 400; hh++) DEPTH[hh] = Math.max(0, DEPTH[hh - 1] + RATE[wxAt(hh - 1)]);
+    function depthAt(h) { return DEPTH[Math.max(0, Math.min(400, Math.floor(h)))]; }
+    var WX = {
+      storm: ["Windstorm, heavy rain", "gale", "precip rain", 0.9],
+      gusty: ["Gusty, steady rain", "gusty", "precip rain", 0.6],
+      rain: ["Cold rain", "gusty", "precip rain light", 0.45],
+      snow: ["Snow, icy driveway", "", "precip snow", 0.9],
+      hail: ["Hail showers", "gusty", "precip hail", 0.8],
+      gray: ["Cold and gray", "", "precip", 0],
+      flurries: ["Snow flurries", "", "precip snow", 0.45],
+      heavysnow: ["Heavy snow", "gusty", "precip snow heavy", 1],
+      freezing: ["Freezing rain: ice on everything", "gusty", "precip rain light", 0.55],
+      drizzle: ["Drizzle", "", "precip rain light", 0.3]
+    };
+    var wxNow = wxAt(t), W = WX[wxNow];
+    var weather = W[0], windCls = W[1], rainCls = W[2];
+    var gust = 0.5 + 0.25 * Math.sin(t * 1.7) + 0.25 * Math.sin(t * 0.63 + 1);
+    var rainOp = Math.round(W[3] * 0.55 * (0.75 + 0.25 * gust) * 100) / 100;
+    var icy = wxNow === "hail" || snowyNear(t);
+    var iceOp = icy ? "1" : "0";
+    var depth = depthAt(t);
+    if (icy && ["snow", "heavysnow", "hail", "freezing"].indexOf(wxNow) < 0) weather = weather + ", icy driveway";
+    if (depth >= 1) weather = weather + " \u00B7 " + Math.round(depth) + " in of snow";
+    var snowH = Math.min(11, depth * 0.9), snowCover = depth >= 1 ? "1" : "0";
+    var stormy = wxNow === "storm";
+    var cloudCls = "clouds" + (wxNow === "storm" || wxNow === "gusty" ? " fast" : "");
+    var cloudOp = { storm: 0.95, gusty: 0.8, rain: 0.7, snow: 0.75, hail: 0.85, gray: 0.8, flurries: 0.6, drizzle: 0.65, heavysnow: 0.95, freezing: 0.8 }[wxNow];
+    var flashCls = "flash" + (stormy ? " on" : ""), flashCls2 = "bolt" + (stormy ? " on" : "");
+    var boltX = (12 + (Math.floor(t * 3) * 37) % 70) + "%";
+    var rainSkew = { storm: "-24deg", gusty: "-16deg", rain: "-8deg", drizzle: "-4deg", freezing: "-10deg", hail: "-14deg" }[wxNow] || "-10deg";
+    var debrisCls = "debris";
+    var prevWx = wxAt(Math.max(0, t - 3));
+    var daytime = !night && !dusk;
+    var fogOp = wxNow === "drizzle" ? "0.35" : "0";
+    var rainbowOp = false && daytime && (wxNow === "gray" || wxNow === "drizzle") && /rain|hail|gusty|storm/.test(prevWx) ? "1" : "0";
+    var clearish = wxNow === "gray" || wxNow === "drizzle" || wxNow === "flurries";
+    var orbOp = clearish ? (night ? "0.85" : "0.55") : "0";
+    var orbBg = night ? "radial-gradient(circle at 65% 35%, transparent 52%, #F3F0DA 54%)" : "radial-gradient(circle, #FFF4C2 0 55%, rgba(255,244,194,0) 72%)";
+    var orbGlow = night ? "none" : "0 0 30px 10px rgba(255,240,180,.35)";
+    var puddleOp = depth < 1 && /rain|drizzle|storm|gusty/.test(wxNow) ? "0.7" : "0";
+    var SNOWMAN = "none", snowmanOp = depth >= 6 && daytime ? "1" : "0";
+    var snowmanFrom = null;
+    for (var sh = 0; sh <= t; sh++) { var hr2 = (18 + sh) % 24; if (depthAt(sh) >= 6 && hr2 >= 8 && hr2 < 17) { snowmanFrom = sh; break; } }
+    if (snowmanFrom !== null && t >= snowmanFrom && depth >= 3) snowmanOp = "1";
+    var groundFill = depth >= 1 || wxNow === "snow" || wxNow === "heavysnow" || wxNow === "flurries" ? "#E8EEF4" : (wxNow === "hail" ? "#B9C6D3" : "#3E6B45");
+    function slips(c) {
+      if (!c || c.kind === "trip" && false) return false;
+      var w = wxAt(c.a), n = Math.floor(c.a * 4);
+      if (w === "hail" || snowyNear(c.a)) return n % 2 === 0;
+      if (w === "storm" || w === "rain" || w === "gusty") return n % 5 === 2;
+      return false;
+    }
+    var skyInk = "#F3F5F8", skyLine = "rgba(243,245,248,0.45)";
+
+    var defs = [
+      { k: "gas", short: "Gasoline portable", how: "Roll out, keep refilling", name: "Gasoline portable", model: "Honda EU7000iS", accent: "#D9711A", installed: 6770, gen: "gas", batt: false, move: "Roll out a 263 lb generator", noise: "52-58 dB" },
+      { k: "batt", short: "Battery", how: "Plug in; drains overnight", name: "Battery", model: "Anker SOLIX F3800 Plus", accent: "#0E8F7E", installed: 4340, gen: "none", batt: true, move: "Nothing, if it stays parked by the plug", noise: "Silent" },
+      { k: "combo", short: "Battery + gasoline", how: "Plug in, later refill", name: "Battery + gasoline", model: "Anker battery + Honda", accent: "#7A52C2", installed: 10190, gen: "gas", batt: true, move: "A 263 lb generator, once the battery dies", noise: "Silent, then 52-58 dB" },
+      { k: "ngp", short: "Nat-gas portable", how: "Roll out; oil every 8 h", name: "Natural-gas portable", model: "Westinghouse WGen9500TFc", accent: "#2F5BD3", installed: 4600, gen: "ngp", batt: false, move: "Roll out a 215 lb generator, hook up gas", noise: "74 dB" },
+      { k: "ngs", short: "Nat-gas standby", how: "Starts itself; oil daily", name: "Natural-gas standby", model: "Generac 10 to 14 kW, installed outside", accent: "#1F8A4C", installed: 10800, gen: "ngs", batt: false, move: "Nothing", noise: "61-65 dB" }
+    ];
+
+    // Event model. Gasoline: a 5.1 gal tank lasts about 16 h at about 400 W; refilling takes about 15 min
+    // with the engine off; 10 gal stored in cans covers two refills, then someone drives out for more.
+    var SETUP = { gas: 0.5, batt: 0.25, combo: 0.25, ngp: 0.75 };
+    // Vacation window [L, H): nobody home. Anything already running keeps going until it needs a person.
+    var L = away ? (st.leaveAt || 0) : (st.homeAt != null ? (st.leaveAt || 0) : 1e9);
+    var H = away ? 1e9 : (st.homeAt != null ? st.homeAt : 1e9);
+    // Clock: t = 0 is 6 PM. The combo's generator runs 7 AM to 11 PM.
+    function comboOn(h) { var c = ((18 + h) % 24 + 24) % 24; return c >= 7 && c < 23; }
+    function lastOffStart(h) { return 5 + 24 * Math.floor((h - 5) / 24); }
+    var NGP_OIL = 8, SB_OIL = 24;  // oil checks: Westinghouse (related model) every 8 h; Generac every 24 h on multi-day runs
+    // One schedule engine for the storm and the sandbox: who must do what, given a vacation window [L, H).
+    // G (optional) makes chores wait for a tap: { taps: {home: [tap times, in order]}, wins: [[from, to)], t: now }.
+    // A chore due inside a tap window starts when it is tapped; until then it waits and its home pays for it.
+    var OIL_GRACE = 6;  // illustrative: hours a skipped oil check keeps running before the low-oil switch shuts it off
+    function makePlanner(L, H, G) {
+      function present(h) { return !(h >= L && h < H); }
+      function nextPresent(h) { return present(h) ? h : H; }
+    function plan(d) {
+      var dark = [], chores = [], gasRuns = [], battEnd = null, oilDue = null;
+      var out = function () { return { dark: dark, chores: chores, gasRuns: gasRuns, battEnd: battEnd, oilDue: oilDue }; };
+      var tapList = (G && G.taps && G.taps[d.short]) || [], ti = 0;
+      function gated(e) { if (!G || !G.wins) return false; for (var i = 0; i < G.wins.length; i++) if (e >= G.wins[i][0] - 1e-6 && e < G.wins[i][1]) return true; return false; }
+      // Schedule a chore due at e that takes dur hours; returns when it actually starts.
+      function job(e, dur, kind, who, text, ask, btn, what) {
+        var s = e, wait = false;
+        if (kind !== "pack" && gated(e) && present(e)) {
+          var tp = tapList[ti];
+          if (tp != null && tp <= G.t + 1e-6) { ti++; s = Math.max(e, tp); }
+          else if (e <= G.t + 1e-6) { s = G.t; wait = true; }
+        }
+        var dp = Math.round(depthAt(s)), w0 = wxAt(s);
+        if (dp >= 4) ask = (kind === "trip" ? "Dig the car out of " + dp + " in of snow first. " : "Shovel a path through " + dp + " in of snow first. ") + ask;
+        else if (w0 === "freezing") ask = "Everything is glazed in ice. " + ask;
+        chores.push({ a: s, b: s + dur, due: e, wait: wait, kind: kind, who: who, text: text, ask: ask, btn: btn, what: what || kind, home: d.short });
+        return s;
+      }
+      // A skipped oil check: the engine keeps running until the low-oil switch stops it.
+      function oilCheck(due, dur, who, text, ask) {
+        var s = job(due, dur, "oil", who, text, ask, "Check the oil");
+        if (s > due + OIL_GRACE) dark.push([due + OIL_GRACE, s]);
+        dark.push([s, s + dur]);
+        return s + dur;
+      }
+      var nOil = 0;
+      if (d.gen === "ngs") {
+        dark.push([0, 0.01]);
+        var x0 = 0.01;
+        while (x0 < 400) {
+          var due = x0 + SB_OIL;
+          if (!present(due)) { oilDue = due; if (H >= 1e9) break; due = H; }
+          nOil++;
+          x0 = oilCheck(due, 0.5, nOil % 2 ? "Husband" : "Wife", "Daily oil check, off 30 minutes", (due > x0 + SB_OIL ? "Home from vacation; it ran with nobody checking the oil. " : "") + "Every 24 hours: shut it off for 30 minutes, check and top up the oil, restart.");
+        }
+        return out();
+      }
+      if (d.k === "combo") return planCombo();
+      var SU = { gas: 0.5, batt: 0.25, combo: 0.25, ngp: 0.75 }[d.k];
+      var setupGen = { gas: ["Pushing out the 263 lb generator in the storm", "Go out in the storm. Push out the 263 lb generator, plug in, start it."], combo: ["Battery dead: out in the dark with the generator", "Battery's dead. Go out in the dark, push out the 263 lb generator."], ngp: ["Pushing out 215 lb, hooking up gas", "Go out in the storm. Push out the 215 lb generator, hook up gas, start it."] }[d.k];
+      var x = nextPresent(0);
+      if (x > 0) dark.push([0, x]);
+      if (x >= 1e9) return out();
+      var back = x > 0 ? "Home from vacation, house dark. " : "";
+      if (d.batt) {
+        var sb0 = job(x, SU, "setup", "Wife", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
+        dark.push([x, sb0 + SU]);
+        battEnd = sb0 + SU + BATT_H;
+        if (d.gen === "none") { dark.push([battEnd, 1e9]); return out(); }
+        x = nextPresent(battEnd);
+        if (x > battEnd) dark.push([battEnd, x]);
+        if (x >= 1e9) return out();
+        back = x > battEnd ? "Home from vacation; the battery died while you were gone. " : "";
+        SU = 0.5;
+      }
+      var k = 0;
+      function setup(at, prefix) {
+        var s = job(at, SU, "setup", "Husband", setupGen[0], prefix + setupGen[1], "Go outside", "gen");
+        dark.push([at, s + SU]);
+        return s + SU;
+      }
+      x = setup(x, back);
+      var LL = L;
+      while (x < 400) {
+        var ev = x + (d.gen === "gas" ? TANK_H : NGP_OIL);
+        if (LL < 1e9 && LL < ev && H > x) {  // leaving during this run (or while it was still being set up)
+          var P = Math.max(LL, x); LL = 1e9;
+          if (d.gen === "gas") gasRuns.push([x, P]);
+          job(P, 0.25, "pack", "Husband", "Packing it up before leaving", "Leaving? It can't run with nobody home. Shut it off, let it cool, unhook it, roll it back in.", "Pack it up", "gen");
+          dark.push([P, H]);
+          if (H >= 1e9) break;
+          x = setup(H, "Home from vacation, house dark. ");
+          continue;
+        }
+        if (d.gen === "gas") {
+          gasRuns.push([x, ev]); k++;
+          var far = k % 4 === 3, ready = 0;
+          if (k >= 3 && k % 2 === 1) { var td = far ? 2.5 : 1.5; ready = job(ev - (far ? 4 : 3), td, "trip", "Wife", far ? "Nearest station had no power; driving farther" : "Driving out for gas, if a station has power", "Gas cans are empty. The husband doesn't drive anymore, so the wife goes, in this weather, hoping a station has power.", "Drive to the station") + td; }
+          var rs = job(Math.max(ev, ready), 0.25, "refill", k % 2 ? "Husband" : "Wife", "Refilling and checking oil, engine off", "Tank almost empty. Go out, shut it off, let it cool, refill, check the oil.", "Go refill it");
+          dark.push([ev, rs + 0.25]);
+          x = rs + 0.25;
+        } else {
+          nOil++;
+          x = oilCheck(ev, 0.25, nOil % 2 ? "Husband" : "Wife", "Oil check, engine off", "Every 8 hours: go out, shut it off, check and top up the oil, restart.");
+        }
+      }
+      return out();
+      // Battery + gasoline, run the way its supporters describe: the Honda runs 7 AM to 11 PM, powering the
+      // house and recharging the battery through Anker's generator input adapter; the battery carries 11 PM to
+      // 7 AM. The Honda app starts and stops it (no trip). Refills happen in the morning, by day.
+      function planCombo() {
+        var x = nextPresent(0);
+        if (x > 0) dark.push([0, x]);
+        if (x >= 1e9) return out();
+        var back = x > 0 ? "Home from vacation, house dark. " : "";
+        var s1 = job(x, 0.25, "setup", "Wife", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
+        if (s1 > x) dark.push([x, s1 + 0.25]);  // plugged in late: dark until the plug-in is done
+        var LL = L;
+        var t0 = setupGen(s1 + 0.25, "Push out the 263 lb generator and connect it to the battery. After this, the phone app starts and stops it.", s1 + 0.25 + BATT_H);
+        var k = 0;
+        while (t0 < 400) {
+          var stopAt = (LL < 1e9 && H > t0) ? Math.max(LL, t0) : 400, skip = false;
+          for (var n = 0; n < 18; n++) {
+            var r = -11 + 24 * n, e0 = Math.min(5 + 24 * n, stopAt);
+            if (r >= stopAt) break;
+            if (skip) { skip = false; continue; }
+            var s0 = Math.max(r, t0);
+            if (r > t0) {
+              k++;
+              var ready = 0;
+              if (k >= 3 && k % 2 === 1 && r - 18 > t0) ready = job(r - 18, 1.5, "trip", "Wife", "Driving out for gas, if a station has power", "Gas cans are empty. The husband doesn't drive anymore, so the wife goes, hoping a station has power.", "Drive to the station") + 1.5;
+              var rs = job(Math.max(r, ready), 0.25, "refill", k % 2 ? "Husband" : "Wife", "Morning refill and oil check; the battery covers", "Morning: go out, refill the generator and check the oil. The battery keeps the house on meanwhile.", "Go refill it");
+              var battDie = r - 8 + BATT_H;  // the battery carried the night from 11 PM
+              if (rs > battDie) dark.push([battDie, rs + 0.25]);  // battery ran out before the refill: dark until it's done
+              s0 = Math.max(s0, rs);
+              if (rs >= e0) {  // refilled after today's run would have ended: it runs straight through the next day
+                var e1 = Math.min(e0 + 24, stopAt);
+                if (e1 > rs) gasRuns.push([rs, e1]);
+                skip = true;
+                continue;
+              }
+            }
+            if (e0 > s0) gasRuns.push([s0, e0]);
+          }
+          if (stopAt >= 400) break;
+          job(LL, 0.25, "pack", "Husband", "Packing up the generator before leaving", "Leaving? The generator can't run with nobody home. Shut it off, unhook it, roll it back in. The battery stays plugged in.", "Pack it up", "gen");
+          var rem = comboOn(LL) ? BATT_H : Math.max(0, BATT_H - (LL - lastOffStart(LL)));
+          var dk = LL + rem;
+          if (H >= 1e9) { dark.push([dk, 1e9]); break; }
+          if (dk < H) dark.push([dk, H]);
+          t0 = setupGen(H, "Home from vacation. Push the generator back out and connect it to the battery.", Math.max(H, dk));
+          LL = 1e9;
+        }
+        return out();
+      }
+      function setupGen(at, ask, battDeadAt) {
+        var s = job(at, 0.5, "setup", "Husband", "Pushing out the 263 lb generator", ask, "Go outside", "gen");
+        if (s > battDeadAt) dark.push([battDeadAt, s + 0.5]);
+        return s + 0.5;
+      }
+    }
+      return { plan: plan, present: present };
+    }
+    var G = st.tapWin && st.tapWin.length ? { taps: st.taps || {}, wins: st.tapWin, t: t } : null;
+    var planner = makePlanner(L, H, G), plan = planner.plan, present = planner.present;
+
+    function sim(d) {
+      var P = plan(d), r = { on: true, covered: t, refills: 0, gal: 0, trips: 0, chore: null, plan: P, waiting: [] };
+      r.darkSince = null;
+      P.dark.forEach(function (iv) {
+        if (iv[0] <= t && t < iv[1]) { r.on = false; r.darkSince = r.darkSince == null ? iv[0] : Math.min(r.darkSince, iv[0]); }
+        r.covered -= Math.max(0, Math.min(t, iv[1]) - iv[0]);
+      });
+      if (t === 0 && d.gen !== "ngs") r.on = false;
+      r.covered = Math.max(0, r.covered);
+      P.chores.forEach(function (c) {
+        if (c.wait) { r.waiting.push(c); return; }
+        if (c.a <= t) { r.trips++; if (c.kind === "refill") r.refills++; }
+        if (c.a <= t && t < c.b) r.chore = c;
+      });
+      var gh = 0;
+      P.gasRuns.forEach(function (g) { gh += Math.max(0, Math.min(t, g[1]) - g[0]); });
+      r.gal = Math.round(gh * GPH);
+      return r;
+    }
+    // Food safety (USDA): a closed fridge keeps food safe about 4 hours without power; a full freezer about 48.
+    function darkRuns(dark, upto) {
+      var iv = dark.map(function (x) { return [Math.max(0, x[0]), Math.min(upto, x[1])]; }).filter(function (x) { return x[1] - x[0] > 0.02; }).sort(function (a, b) { return a[0] - b[0]; });
+      var m = []; iv.forEach(function (x) { var l = m[m.length - 1]; if (l && x[0] <= l[1] + 0.01) l[1] = Math.max(l[1], x[1]); else m.push([x[0], x[1]]); });
+      return m;
+    }
+    function food(dark, upto) {
+      var runs = darkRuns(dark, upto), longest = 0, cur = 0;
+      runs.forEach(function (x) { longest = Math.max(longest, x[1] - x[0]); if (x[1] >= upto - 0.01) cur = x[1] - x[0]; });
+      return { fridgeLost: longest >= 4, freezerLost: longest >= 48, cur: cur, longest: longest };
+    }
+    var events = [];
+    // Each yard has its own tree: [trunk x, y, w, h, canopy path, color, shade path, sway style]. Base at (204.5, 57).
+    var TREE = {
+      gas: [203.4, 46, 2.2, 11, "M204.5 12L196.5 27H200.5L193 39H198L190.5 50H218.5L211 39H216L208.5 27H212.5Z", "#1F5A36", "M204.5 12L208.5 27H212.5L205 27Z", "v4"],
+      batt: [202, 37, 5, 20, "M189 33a8 8 0 0 1 9-10a9 9 0 0 1 15 0a8 8 0 0 1 8 10a7 7 0 0 1-6 8h-20a7 7 0 0 1-6-8Z", "#2C5E38", "M200 41h15a7 7 0 0 0 6-8a8 8 0 0 1-4 5h-17Z", "v3"],
+      combo: [202.6, 39, 3.8, 18, "M192.5 30a12 12 0 1 0 24 0a12 12 0 1 0-24 0Z", "#2F6B3F", "M204.5 42a12 12 0 0 0 12-12a10 10 0 0 1-12 9Z", "v1"],
+      ngp: [203.5, 43, 2.6, 14, "M198.6 27a6.2 17 0 1 0 12.4 0a6.2 17 0 1 0-12.4 0Z", "#3A7D4B", "M204.8 44a6.2 17 0 0 0 6.2-17a5 15 0 0 1-6.2 14Z", "v2"],
+      ngs: [203.2, 45, 3, 12, "M195 38a9.5 7.5 0 1 0 19 0a9.5 7.5 0 1 0-19 0Z", "#4C8A45", "M204.5 45.5a9.5 7.5 0 0 0 9.5-7.5a8 6 0 0 1-9.5 5Z", "v5"]
+    };
+    var LEAF = { k: "none", at: 1e9 };  // no random tree events: the storm is the same on every play
+    var FLY = {};
+    var sims = {}, pending = [];
+    defs.forEach(function (d) { sims[d.k] = sim(d); pending = pending.concat(sims[d.k].waiting); });
+    pending.sort(function (x, y) { return x.due - y.due; });
+    self._waiting = pending;
+    var opts = defs.map(function (d) {
+      var r = sims[d.k];
+      r.plan.chores.forEach(function (c) {
+        if (c.wait) return;
+        events.push(c);
+        if (c.kind === "trip") events.push({ a: c.b - 0.5, b: c.b, kind: "tripback", home: d.short, who: "Wife", ask: "Fill the cans, lift about 60 lb of gas into the car, drive home in this weather.", btn: "Drive home" });
+      });
+      var cover;
+      if (t === 0) cover = d.gen === "ngs" ? "Starts by itself in about 30 seconds" : (away ? "Nobody home to set it up" : "Waiting for someone to set it up");
+      else if (d.gen !== "ngs" && L === 0 && !present(t)) cover = "Dark: nobody home to set it up";
+      else if (r.on) cover = "Power the whole " + dur(t);
+      else cover = "Dark for the last " + dur(t - r.covered);
+      var refuel;
+      if (d.gen === "ngs" || d.gen === "ngp") refuel = "Never: house gas line";
+      else if (d.gen === "none") refuel = "Can't: no way to recharge";
+      else if (r.gal > 0) refuel = r.refills + (r.refills === 1 ? " refill, " : " refills, ") + r.gal + " gal burned so far";
+      else refuel = "Every 6 to 16 hours";
+      var c = r.chore, now, nowInk = "#14532D";
+      var dk = r.on || r.darkSince == null ? 0 : t - r.darkSince;
+      var fd = food(r.plan.dark, t);
+      var slipping = !!c && slips(c) && !r.waiting.length && (c.kind !== "trip" || t < c.a + 0.5);
+      if (r.waiting.length) {
+        var w0 = r.waiting[0], late = t - w0.due;
+        now = w0.kind === "oil" && late > OIL_GRACE ? "Oil unchecked " + dur(late) + ": it shut itself off" : "Needs the " + w0.who.toLowerCase() + (late >= 0.25 ? " \u00B7 " + (late < 1 ? Math.round(late * 60) + " min" : dur(late)) + " late" : " outside");
+        nowInk = r.on ? "#B4480C" : "#9B1C1C";
+      }
+      else if (c) { now = slipping ? c.who + " slipped outside; caught " + (c.who === "Wife" ? "herself" : "himself") : c.who + ": " + c.text.charAt(0).toLowerCase() + c.text.slice(1); nowInk = "#B4480C"; }
+      else if (!present(t) && !r.on) { now = "Dark: away on vacation"; nowInk = "#9B1C1C"; }
+      else if (d.gen === "ngs" && !present(t)) { now = r.plan.oilDue != null && t > r.plan.oilDue ? "Nobody home: oil unchecked " + dur(t - r.plan.oilDue + 24) : "Nobody home: running"; nowInk = r.plan.oilDue != null && t > r.plan.oilDue ? "#B4480C" : "#14532D"; }
+      else if (!present(t)) {
+        var nd = r.plan.dark.filter(function (iv) { return iv[0] > t; }).map(function (iv) { return iv[0]; }).sort(function (x, y) { return x - y; })[0];
+        now = nd != null && nd < 1e9 ? "Nobody home: goes dark in " + dur(nd - t) : "Nobody home";
+      }
+      else if (d.gen === "ngs") now = t < 0.01 ? "Starting by itself" : "Running on its own";
+      else if (!r.on && dk >= 12) { now = "Dark and cold: no heat for " + dur(dk); nowInk = "#9B1C1C"; }
+      else if (!r.on && dk >= 4) { now = "Dark and getting cold"; nowInk = "#9B1C1C"; }
+      else if (!r.on) { now = "Dark: nothing left to run"; nowInk = "#9B1C1C"; }
+      else now = d.k === "combo" && !comboOn(t) ? "Running on the battery overnight" : (d.batt && t < (r.plan.battEnd || 0) ? "Running on the battery" : "Running");
+      var doing = c ? ({ trip: "Out for gas", refill: "Refilling", oil: "Oil check", pack: "Packing up" }[c.kind] || "Outside") : null;
+      var lastMove = r.plan.chores.filter(function (ch) { return (ch.kind === "setup" && ch.what === "gen" || ch.kind === "pack") && ch.a <= t; }).pop();
+      var deployed = !!lastMove && lastMove.kind === "setup";
+      var inBatt = d.batt && r.plan.battEnd != null && t < r.plan.battEnd;
+      var plugged = d.batt && r.plan.chores.some(function (ch) { return ch.what === "batt" && ch.b <= t; }) && (inBatt || d.gen !== "none");
+      var genLive = (d.gen === "gas" || d.gen === "ngp") && deployed && r.on && !inBatt && !(d.k === "combo" && !comboOn(t));
+      var nz = !r.on ? 0 : (d.gen === "ngs" ? 2 : (genLive ? (d.gen === "ngp" ? 3 : 1) : 0));
+      var waitingHere = r.waiting.length > 0, firstWaiting = waitingHere, waitingBack = false;
+      if (waitingHere) c = null;
+      var tripPhase = c && c.kind === "trip" ? (t < c.a + 0.5 ? "out" : (t >= c.b - 0.5 && !waitingBack ? "back" : "away")) : "";
+      var handsOff = d.gen === "ngs";
+      return {
+        smokeOp: r.on ? "1" : "0",
+        candleOp: !r.on && present(t) && t > 0.3 ? "1" : "0",
+        cordOp: genLive ? "1" : "0",
+        hoseOp: d.gen === "ngp" && deployed ? "1" : "0",
+        battCordOp: d.batt && plugged ? "1" : "0",
+        noiseX: d.gen === "ngs" ? "64" : "157",
+        n1: nz >= 1 ? "1" : "0", n2: nz >= 2 ? "1" : "0", n3: nz >= 3 ? "1" : "0",
+        fridgeTxt: fd.freezerLost ? "Fridge + freezer lost" : (fd.fridgeLost ? "Fridge food lost" : (fd.cur > 0.3 ? "Warming: " + Math.min(4, Math.round(fd.cur)) + " of 4 h" : "Fridge cold")),
+        fridgeInk: fd.fridgeLost ? "#FFFFFF" : "#13202E",
+        fridgeBg: fd.fridgeLost ? "#9B1C1C" : (fd.cur > 0.3 ? "#FFC94D" : "#BFE3FF"),
+        fridgeCard: fd.freezerLost ? "Fridge and freezer food lost (dark " + dur(fd.longest) + ")" : (fd.fridgeLost ? "Fridge food lost (dark " + dur(fd.longest) + "); freezer OK under 48 h" : (fd.cur > 0.3 ? "Warming: safe for about " + dur(Math.max(0, 4 - fd.cur)) + " more" : "Cold and safe")),
+        name: d.name, short: d.short, how: d.how, snowmanOp: d.k === SNOWMAN ? snowmanOp : "0", sbOp: d.gen === "ngs" ? "1" : "0", model: d.model, accent: d.accent,
+        win: r.on ? "#FFC94D" : (dk >= 12 ? "#7FA6CF" : "#3A4656"),
+        outs: (function () {
+          var P = 0, N = 0;
+          r.plan.chores.forEach(function (ch) {
+            var done = !ch.wait && ch.a <= t;
+            if (done) { if (ch.who === "Husband") P++; else N++; }
+          });
+          return "Husband " + P + " \u00B7 Wife " + N;
+        })(),
+        outsInk: d.gen === "ngs" ? "#8EE3A8" : "#FFB27A",
+        who: c ? c.who : "", pColor: c && c.who === "Wife" ? "#F27BC0" : "#FF8A3D",
+        trunkX: TREE[d.k][0], trunkY: TREE[d.k][1], trunkW: TREE[d.k][2], trunkH: TREE[d.k][3], treeD: TREE[d.k][4], treeFill: TREE[d.k][5], treeD2: TREE[d.k][6], swayCls: TREE[d.k][7],
+        leafOp: d.k === LEAF.k && t >= LEAF.at ? "0" : "1",
+        bareOp: d.k === LEAF.k && t >= LEAF.at ? "1" : "0",
+        shedCls: d.k === LEAF.k && t >= LEAF.at - 0.5 && t < LEAF.at + 2 ? "shed on" : "shed",
+        treeCls: FLY[d.k] != null && t >= FLY[d.k] ? "uproot" : "",
+        stumpOp: FLY[d.k] != null && t >= FLY[d.k] ? "1" : "0",
+        rowBg: firstWaiting ? "rgba(255,138,61,0.28)" : "rgba(255,255,255,0.07)",
+        rowRing: firstWaiting ? "inset 0 0 0 2px #FF8A3D" : "none",
+        litWord: waitingHere ? "Needs you" : ((doing ? doing : (d.gen === "ngs" && t < 0.01 ? "Starting" : (r.on ? "On" : "Dark")))),
+        aria: d.short + ": " + now,
+        now: now, nowInk: nowInk,
+        carOp: c && c.kind === "trip" ? "0" : "1",
+        tripOp: tripPhase === "away" ? "1" : "0",
+        glowOp: r.on && !c ? "0.45" : "0",
+        genCls: c && c.kind === "setup" && c.what === "gen" ? "g-push" : (c && c.kind === "pack" ? "g-pack" : ""),
+        battCls: "",
+        carCls: tripPhase === "out" ? "c-drive" : (tripPhase === "away" ? "c-gone" : (tripPhase === "back" ? "c-back" : "")),
+        personCls: !c || waitingHere ? "" : (c.kind === "trip" ? (tripPhase === "back" ? "p-home" : (tripPhase === "out" ? "p-trip" : ""))  : (c.kind === "oil" && d.gen === "ngs" ? "p-batt" : c.kind === "refill" || c.kind === "oil" ? "p-refill" : (c.what === "batt" ? "p-batt" : "p-gen"))),
+        battOp: d.batt ? "1" : "0",
+        canOp: c && c.kind === "refill" ? "1" : "0",
+        slipCls: slipping && c ? "slip" : "",
+        whoaOp: slipping && c ? "1" : "0",
+        genOp: d.gen === "none" || d.gen === "ngs" ? "0" : ( (c && c.what === "gen") ? "1" : (deployed && !(d.batt && t < (r.plan.battEnd || 0)) ? "1" : "0.15")),
+        personOp: c && !waitingHere && tripPhase !== "away" ? "1" : "0",
+        ring: r.on ? "#FFC94D" : "#E5484D",
+        ringBg: r.on ? "#FFF4D6" : (dk >= 12 ? "#1F3550" : "#2A3442"),
+        houseInk: r.on ? "#13202E" : "#9AA6B4",
+        wordBg: waitingHere || doing ? "#FF8A3D" : (r.on ? "#FFC94D" : "#B42318"),
+        wordInk: waitingHere || doing ? "#13202E" : (r.on ? "#13202E" : "#FFFFFF"),
+        barPct: (t > 0 ? Math.round(r.covered / t * 100) : (r.on ? 100 : 0)) + "%",
+        cover: cover,
+        move: d.move,
+        refuel: refuel,
+        trips: r.trips === 0 ? "None" : String(r.trips),
+        noise: r.on ? d.noise : "Quiet: nothing running",
+        installed: "~$" + d.installed.toLocaleString("en-US"),
+        priceNote: { ngp: "installed ($3,500 to $7,300)", ngs: "installed, Seattle-area quotes ($8,500 to $13,000)" }[d.k] || "installed",
+        badge: handsOff ? "Starts itself" : "Someone goes outside",
+        badgeBg: handsOff ? "#FFF4D6" : "#FF8A3D",
+        badgeInk: "#13202E",
+        outline: "none",
+        wordDisp: waitingHere ? "none" : "inline-block",
+        tapDisp: waitingHere ? "inline-block" : "none",
+        tapLabel: waitingHere ? r.waiting[0].btn : "",
+        tapAria: waitingHere ? d.short + ": " + r.waiting[0].btn : "",
+        tap: function () { self.setState(tapNow(null, d.short)); }
+      };
+    });
+
+    self._events = events.filter(function (e) { return true; }).sort(function (x, y) { return x.a - y.a; });
+    var waitHomes = pending.map(function (c) { return c.home; }).filter(function (h, i, a) { return a.indexOf(h) === i; });
+    var busyNow = opts.filter(function (o) { return o.personOp === "1" || o.carOp === "0"; });
+    var holdLeft = st.holdLeft || 0;
+    var holdInfo = "";
+    if (!pending.length && playing && auto && holdLeft > 0 && busyNow.length) {
+      var secs = Math.max(1, Math.ceil(holdLeft * TICK_MS / 1000));
+      holdInfo = (busyNow.length === 1 ? busyNow[0].short + ": " + busyNow[0].now.charAt(0).toLowerCase() + busyNow[0].now.slice(1) : busyNow.length + " homes have someone outside") + ". Continues in " + secs + " s.";
+    }
+    var caption;
+    var flew = defs.filter(function (d) { return FLY[d.k] != null && t >= FLY[d.k] && t < FLY[d.k] + 1.5; })[0];
+    if (!busyNow.length && flew) caption = hm + ". The wind just knocked over the tree in the " + flew.short + " yard.";
+    else if (busyNow.length === 1) caption = hm + ". " + busyNow[0].short + " home: " + busyNow[0].now.charAt(0).toLowerCase() + busyNow[0].now.slice(1) + (busyNow[0].short === "Nat-gas standby" ? "." : ". The standby: nothing to do right now.");
+    else if (busyNow.length > 1) caption = hm + ". " + busyNow.length + " of 5 homes have someone outside in the storm (" + busyNow.map(function (o) { return o.short; }).join(", ") + "). The standby starts by itself.";
+    else if (away && L > 0) caption = "On vacation. The portable generators had to be packed up before leaving, and the battery drains on its own. Only the standby keeps the lights on, with nobody checking its oil.";
+    else if (away) caption = t === 0 ? "You're on vacation when it hits. Only the standby starts; everything else is still in the garage." : "On vacation for " + dur(t) + ". The standby has kept the house running on its own. Every other home has been dark the whole time.";
+    else if (t === 0) caption = "6 PM: the power goes out. The standby starts by itself. Everything else waits for someone to go outside, roll it out and plug it in.";
+    else if (t < SETUP.ngp + 0.25) caption = "Every home except the standby needed someone outside in the storm just to get the lights back on.";
+    else if (t < BATT_H) caption = "Everything is running. The battery is silent, the generators are not.";
+    else if (t < 16) caption = "Overnight, the battery runs out. With battery + gasoline, someone now rolls out the generator in the dark.";
+    else if (t < 48) caption = "The next day. The gasoline generators need refilling every 6 to 16 hours, after the engine cools.";
+    else if (t < 144) caption = "Day " + (day + 1) + ". In the November 2024 bomb cyclone, many homes here were still out after a week.";
+    else caption = "Day " + (day + 1) + ". Gasoline portable: " + Math.round(t * GPH) + " gallons fetched and carried so far. Natural gas: no refills at all.";
+    var bt = opts.filter(function (o) { return o.short === "Battery"; })[0];
+    var bEnd = BATT_H + 0.25;
+    if (!busyNow.length && !flew && !away && t >= bEnd + 4 && t < bEnd + 6) caption = hm + ". The battery house has been dark 4 hours. A closed fridge keeps food safe about 4 hours without power (USDA), and their gas furnace can't run without electricity.";
+    else if (!busyNow.length && !flew && !away && t >= bEnd + 12 && t < bEnd + 14) caption = hm + ". 12 hours dark at the battery house: no heat since early morning. The windows are frosting over.";
+    if (!busyNow.length && !flew && !away && rainbowOp === "1") caption = hm + ". The rain lets up and a rainbow comes out. The power is still off.";
+    else if (false) caption = hm + ". " + Math.round(depth) + " inches of snow. The battery house built a snowman; it has been dark since the first night.";
+    var stripped = defs.filter(function (d) { return d.k === LEAF.k; })[0];
+    if (!busyNow.length && !flew && !away && t >= LEAF.at && t < LEAF.at + 1.5) caption = hm + ". The wind just stripped every leaf off the tree in the " + stripped.short + " yard.";
+
+    var presets = [["6 PM", 0], ["8 hours", 8], ["1 day", 24], ["2 days", 48], ["1 week", 168], ["2 weeks", 336]].map(function (p) {
+      var on = t === p[1];
+      return { label: p[0], bg: on ? "#F3F5F8" : "transparent", ink: on ? "#13202E" : skyInk, pick: function () { stopPlay(); jumpTo(p[1], { playing: false }); } };
+    });
+
+    // ---- Sandbox: pick a setup, an outage length and who is home; get the totals instantly ----
+    var SB = st.sb || { k: "gas", T: 168, home: "home" };
+    var HOME_OPTS = { home: [1e9, 1e9, "Home"], start: [0, 1e9, "Away"], mid: [24, 96, "Away days 2\u20134"] };
+    function isNightHour(h) { var hr = (18 + h) % 24; return hr >= 20 || hr < 7; }
+    function hardAt(h) { return isNightHour(h); }  // compared numbers use the clock only, never the illustrative weather
+    function runSandbox(k, T, homeKey) {
+      var hw = HOME_OPTS[homeKey], d = defs.filter(function (x) { return x.k === k; })[0];
+      var P = makePlanner(hw[0], hw[1]).plan(d);
+      var ch = P.chores.filter(function (c) { return c.a < T; });
+      var husband = ch.filter(function (c) { return c.who === "Husband"; }).length;
+      var wife = ch.length - husband;
+      var hard = ch.filter(function (c) { return hardAt(c.a); }).length;
+      var runs = ch.filter(function (c) { return c.kind === "trip"; }).length;
+      var gh = 0; P.gasRuns.forEach(function (g) { gh += Math.max(0, Math.min(T, g[1]) - g[0]); });
+      var iv = P.dark.map(function (x) { return [Math.max(0, x[0]), Math.min(T, x[1])]; }).filter(function (x) { return x[1] - x[0] > 0.02; }).sort(function (a, b) { return a[0] - b[0]; });
+      var merged = [];
+      iv.forEach(function (x) { var m = merged[merged.length - 1]; if (m && x[0] <= m[1] + 0.01) m[1] = Math.max(m[1], x[1]); else merged.push([x[0], x[1]]); });
+      var darkH = 0, longest = 0; merged.forEach(function (x) { darkH += x[1] - x[0]; longest = Math.max(longest, x[1] - x[0]); });
+      var spoil = merged.filter(function (x) { return x[1] - x[0] >= 4; }).length;
+      return { spoil: spoil, d: d, chores: ch, n: ch.length, husband: husband, wife: wife, hard: hard, runs: runs, gal: Math.round(gh * GPH), darkH: darkH, longest: longest, dark: merged };
+    }
+    function hrs(h) { return h < 1 ? (h < 0.05 ? "none" : "under 1 h") : (h < 48 ? Math.round(h) + " h" : (Math.round(h / 24 * 10) / 10) + " days"); }
+    var R = runSandbox(SB.k, SB.T, SB.home), RS = runSandbox("ngs", SB.T, SB.home);
+    var lenLabel = { 24: "1 day", 72: "3 days", 168: "1 week", 336: "2 weeks" }[SB.T];
+    var SHORT = { gas: "Gasoline", batt: "Battery", combo: "Battery + gas", ngp: "Nat-gas portable", ngs: "Nat-gas standby" };
+    var sbSetups = defs.map(function (d) { var on = SB.k === d.k; return { label: SHORT[d.k], bg: on ? "#13202E" : "#FFFFFF", ink: on ? "#FFFFFF" : "#13202E", pressed: on ? "true" : "false", accent: d.accent,
+      pick: function () { self.setState({ sb: Object.assign({}, SB, { k: d.k }) }); } }; });
+    var sbLens = [[24, "1 day"], [72, "3 days"], [168, "1 week"], [336, "2 weeks"]].map(function (x) { var on = SB.T === x[0]; return { label: x[1], bg: on ? "#13202E" : "#FFFFFF", ink: on ? "#FFFFFF" : "#13202E", pressed: on ? "true" : "false",
+      pick: function () { self.setState({ sb: Object.assign({}, SB, { T: x[0] }) }); } }; });
+    var sbHomes = ["home", "start", "mid"].map(function (h) { var on = SB.home === h; return { label: HOME_OPTS[h][2], bg: on ? "#13202E" : "#FFFFFF", ink: on ? "#FFFFFF" : "#13202E", pressed: on ? "true" : "false",
+      pick: function () { self.setState({ sb: Object.assign({}, SB, { home: h }) }); } }; });
+    var where = SB.home === "home" ? "at home" : (SB.home === "start" ? "away the whole time" : "away days 2 to 4");
+    var verdict;
+    if (R.d.k === "ngs") verdict = lenLabel + ", " + where + ": the standby is never dark longer than " + (R.longest <= 0.6 ? "30 minutes" : hrs(R.longest)) + ". " + (R.n ? "Its only chore is a short oil check about once a day (" + R.n + " in all)." : (SB.T <= 24 ? "Nothing to do in the first day." : "")) + (SB.home !== "home" && SB.T > 24 ? " While nobody is home, nobody checks the oil; Generac advises a check every 24 hours in long outages." : "");
+    else if (R.n === 0) verdict = lenLabel + ", " + where + ": nobody can set it up, so the house is dark the whole time" + (R.spoil ? " and the fridge food is lost" + (R.longest >= 48 ? ", freezer too." : ".") : ".");
+    else if (R.d.k !== "ngs" && false) verdict = "";
+    else verdict = lenLabel + ", " + where + ": " + R.n + (R.n === 1 ? " trip" : " trips") + " outside" + (R.hard ? ", " + R.hard + " of them at night" : "") + (R.runs ? ", and " + R.runs + " drive" + (R.runs > 1 ? "s" : "") + " for gas by the wife" : "") + (R.darkH < 0.05 ? ". Never dark" : ". Dark for " + hrs(R.darkH) + " in all") + (R.spoil ? ", and the fridge food is lost." : "; the fridge stays cold.");
+    var tiles = [
+      ["Trips outside", String(R.n), "Husband " + R.husband + " \u00B7 Wife " + R.wife],
+      ["At night (8 PM to 7 AM)", String(R.hard), R.n ? Math.round(R.hard / R.n * 100) + "% of trips" : "none"],
+      ["Gas runs (wife drives; this storm, illustrative)", String(R.runs), R.gal ? R.gal + " gal burned" : "no gasoline"],
+      ["Hours dark", hrs(R.darkH), "of " + lenLabel],
+      ["Fridge food", R.spoil ? "Lost" : "Safe", R.spoil ? (R.longest >= 48 ? "freezer too: dark " + hrs(R.longest) + " (USDA: 4 h fridge, 48 h full freezer)" : "dark " + hrs(R.longest) + " at once; USDA says 4 h") : "never dark 4 h at once"],
+      ["Longest without heat", hrs(R.longest), R.longest >= 4 ? "gas furnace needs power to run" : "furnace keeps running"],
+      ["Installed", "~$" + R.d.installed.toLocaleString("en-US"), { ngp: "range $3,500 to $7,300", ngs: "Seattle-area range $8,500 to $13,000" }[R.d.k] || "electrician hookup included"]
+    ].map(function (x) { return { label: x[0], value: String(x[1]).replace("under 1 h", "<1 h"), sub: x[2] }; });
+    var dTrips = R.n - RS.n;
+    var PRICE = { gas: [6770, 6770], batt: [4340, 4340], combo: [10190, 10190], ngp: [3470, 7350], ngs: [8500, 13000] };
+    function r100(v) { return "$" + (Math.round(v / 100) * 100).toLocaleString("en-US"); }
+    function gapText(k) { var lo = PRICE.ngs[0] - PRICE[k][1], hi = PRICE.ngs[1] - PRICE[k][0]; if (hi <= 0) return "about " + r100(-hi) + " to " + r100(-lo) + " less"; if (lo >= 0) return "about " + r100(lo) + " to " + r100(hi) + " more"; return "from " + r100(-lo) + " less to " + r100(hi) + " more"; }
+    var vsStandby = R.d.k === "ngs" ? "This is the standby." : "Compared with the standby: " + (dTrips >= 0 ? dTrips + " more trips outside" : -dTrips + " fewer trips") + ", " + (R.darkH - RS.darkH < 1 ? "about the same time in the dark" : hrs(R.darkH - RS.darkH) + " more in the dark") + ". The standby costs " + gapText(R.d.k) + " to install.";
+    // Timeline strip: amber = power, navy = dark, orange ticks = someone had to go out.
+    var stops = [], pos = 0, PCT = function (h) { return (h / SB.T * 100).toFixed(2) + "%"; };
+    R.dark.forEach(function (x) { if (x[0] > pos) stops.push("#FFC94D " + PCT(pos) + " " + PCT(x[0])); stops.push("#1C2A3C " + PCT(x[0]) + " " + PCT(x[1])); pos = x[1]; });
+    if (pos < SB.T) stops.push("#FFC94D " + PCT(pos) + " 100%");
+    var ticks = R.chores.map(function (c) { var p = c.a / SB.T * 100; return "transparent " + Math.max(0, p - 0.25).toFixed(2) + "%, #FF8A3D " + Math.max(0, p - 0.25).toFixed(2) + "% " + (p + 0.25).toFixed(2) + "%, transparent " + (p + 0.25).toFixed(2) + "%"; });
+    var timeline = (ticks.length ? "linear-gradient(to right, " + ticks.join(", ") + "), " : "") + "linear-gradient(to right, " + stops.join(", ") + ")";
+    // "What matters": computed toggles come from the engine for the current length and who's-home choice;
+    // "Nothing to move" and "Quietest" are labeled judgments (quiet is ranked by published dB at light load).
+    self._sbCache = self._sbCache || {};
+    function cachedRun(k, T, home) { var key = k + "|" + T + "|" + home; if (!self._sbCache[key]) self._sbCache[key] = runSandbox(k, T, home); return self._sbCache[key]; }
+    var cur = {}, awayRuns = {}, maxTrips = 1;
+    defs.forEach(function (d) { cur[d.k] = cachedRun(d.k, SB.T, SB.home); awayRuns[d.k] = cachedRun(d.k, SB.T, "start"); maxTrips = Math.max(maxTrips, cur[d.k].n); });
+    var JUDGE = { move: { gas: 0, batt: 1, combo: 0, ngp: 0, ngs: 1 }, quiet: { batt: 1, gas: 0.75, combo: 0.875, ngs: 0.5, ngp: 0.25 } };
+    var score = {
+      lights: function (k) { return 1 - Math.min(1, cur[k].darkH / SB.T); },
+      fewest: function (k) { return 1 - cur[k].n / maxTrips; },
+      refuel: function (k) { return cur[k].chores.some(function (c) { return c.kind === "refill" || c.kind === "trip"; }) ? 0 : 1; },
+      away: function (k) { return 1 - Math.min(1, awayRuns[k].darkH / SB.T); },
+      move: function (k) { return JUDGE.move[k]; },
+      quiet: function (k) { return JUDGE.quiet[k]; }
+    };
+    var chipDefs = [["lights", "Lights stay on"], ["fewest", "Fewest trips outside"], ["refuel", "No refueling"], ["away", "Works while they're away"], ["move", "Nothing to move"], ["quiet", "Quietest"]];
+    var chips = chipDefs.map(function (c) {
+      var on = !!prio[c[0]];
+      return { label: c[1], pressed: on ? "true" : "false", bg: on ? "#13202E" : "#FFFFFF", ink: on ? "#FFFFFF" : "#13202E",
+        pick: function () { var n = Object.assign({}, prio); if (n[c[0]]) delete n[c[0]]; else n[c[0]] = true; self.setState({ prio: n }); } };
+    });
+    var picked = chipDefs.filter(function (c) { return prio[c[0]]; }).map(function (c) { return c[0]; });
+    var byTrips = defs.slice().sort(function (a, b2) { return (cur[a.k].darkH - cur[b2.k].darkH) || (cur[a.k].n - cur[b2.k].n); });
+    var fit = "Tap what matters to you to rank the five options.", fitWhy = "For " + lenLabel + ", " + where + ", by time dark, then trips outside: " + byTrips.map(function (d) { return d.name + " (" + (cur[d.k].darkH < 0.05 ? "never dark" : hrs(cur[d.k].darkH) + " dark") + ", " + cur[d.k].n + " trips)"; }).join("  \u00B7  ") + ". Scores use this simulation; \"Nothing to move\" and \"Quietest\" are judgment calls from the specs.";
+    if (picked.length) {
+      var ranked = defs.map(function (d) {
+        var s2 = 0;
+        picked.forEach(function (p) { s2 += score[p](d.k); });
+        return { d: d, s: s2 / picked.length };
+      }).sort(function (a, b2) { return b2.s - a.s; });
+      var top = ranked[0], close = ranked[1] && top.s - ranked[1].s < 0.05;
+      fit = close ? "Close call: " + top.d.name + " and " + ranked[1].d.name : "Best fit: " + top.d.name;
+      fitWhy = ranked.map(function (x) { return x.d.name + " " + Math.round(x.s * 100) + "%"; }).join("  \u00B7  ") + ". Each pick counts equally; scores use this simulation for " + lenLabel + ", " + where + ".";
+      opts.forEach(function (o) { if (o.name === top.d.name) o.outline = "3px solid " + top.d.accent; });
+    }
+
+    return {
+      t: t, clock: clock, outFor: t === 0 ? "The power just went out" : "Power out " + dur(t),
+      weather: weather, windCls: windCls, rainCls: rainCls, rainOp: rainOp, groundFill: groundFill, boltX: boltX, rainSkew: rainSkew, debrisCls: debrisCls, fogOp: fogOp, rainbowOp: rainbowOp, orbOp: orbOp, orbBg: orbBg, orbGlow: orbGlow, puddleOp: puddleOp, snowCover: snowCover, snowH: snowH.toFixed(1), snowY: (56 - snowH).toFixed(1), iceOp: iceOp, cloudCls: cloudCls, cloudOp: cloudOp, flashCls: flashCls, flashCls2: flashCls2,
+      capDisp: (pending.length || holdInfo) ? "none" : "block", promptDisp: (pending.length || holdInfo) ? "flex" : "none",
+      promptBg: pending.length ? "#FF8A3D" : "rgba(243,245,248,0.12)",
+      promptInk: pending.length ? "#13202E" : "#F3F5F8",
+      promptEdge: pending.length ? "#13202E" : "#F3F5F8",
+      promptBtnDisp: pending.length ? "inline-block" : "none",
+      promptBtnBg: "#13202E",
+      promptBtnInk: pending.length ? "#FFFFFF" : "#13202E",
+      promptAct: pending.length ? function () { self.renderVals().goOut(); } : function () { self.renderVals().togglePlay(); },
+      prompt: !pending.length ? holdInfo : (waitHomes.length === 1 ? pending[0].home + " \u00B7 " + pending[0].who + ": " + pending[0].ask : waitHomes.length + " homes need someone outside. Each stays dark until you tap; the storm keeps going."),
+      promptBtn: !pending.length ? "\u275A\u275A Pause" : (waitHomes.length === 1 ? pending[0].btn : "Do all " + waitHomes.length),
+      pending: pending,
+      goOut: function () { self.setState(tapNow()); },
+      outCount: clicks ? "You've gone out " + clicks + (clicks === 1 ? " time" : " times") + ". Standby: 0" : "",
+      sky: sky, skyInk: skyInk, skyLine: skyLine, caption: caption, presets: presets,
+      awayLabel: away ? "On vacation \u2014 tap to come home" : (st.homeAt != null ? "Back home \u2014 Reset to try another trip" : "Go on vacation"),
+      awayCls: away ? "" : "pulse",
+      autoLabel: auto ? "Chores: auto" : "Chores: I tap",
+      autoAria: auto ? "Chores: auto. Chores happen on their own. Tap to do them yourself." : "Chores: I tap. Chores wait for your tap while the storm keeps going; a home stays dark until you tap. Tap to let them happen on their own.", autoPressed: auto ? "true" : "false",
+      autoBg: "transparent", autoInk: skyInk,
+      reset: function () {
+        stopPlay();
+        self.setState(Object.assign({ t: 0, away: false, leaveAt: null, homeAt: null, clicks: 0, playing: false, fly: null }, freshTaps()));
+        setTimeout(function () { var fresh = self.renderVals(); if (!self._timer) fresh.togglePlay(); }, 60);
+      },
+      toggleAuto: function () {
+        var toAuto = self.state.auto === false, now = self.state.t || 0;
+        var wins = (self.state.tapWin || []).map(function (w) { return w.slice(); });
+        if (toAuto) {  // anything waiting gets done now; chores from here on happen on their own
+          wins.forEach(function (w) { if (w[1] > now) w[1] = now + 0.001; });
+          self.setState(tapNow({ auto: true, tapWin: wins }));
+        } else { wins.push([now, 1e9]); self.setState({ auto: false, tapWin: wins }); }
+      }, awayPressed: away ? "true" : "false",
+      awayBg: away ? "transparent" : "#FFFFFF", awayInk: away ? skyInk : "#13202E",
+      toggleAway: function () {
+        var now = self.state.t || 0;
+        if (!away && self.state.homeAt != null) return;  // one vacation per playthrough; Reset to try again
+        if (!away) {
+          self.setState(tapNow({ away: true, leaveAt: now, homeAt: null }));  // waiting chores get done on the way out
+          if (now > 0) setTimeout(function () { try { self.renderVals(); } catch (err) {} waitAt(now); }, 60);
+          return;
+        }
+        self.setState({ away: false, homeAt: now > (self.state.leaveAt || 0) ? now : null, leaveAt: now > (self.state.leaveAt || 0) ? (self.state.leaveAt || 0) : null });
+        setTimeout(function () { try { self.renderVals(); } catch (err) {} waitAt(now); }, 60);
+      },
+      setT: function (e) { stopPlay(); jumpTo(Number(e.target.value), { playing: false }); },
+      togglePlay: function () { if (playing) { stopPlay(); self.setState({ playing: false }); } else { if (t >= 336) self.setState({ clicks: 0 }); startPlay(); } },
+      playLabel: playing ? "\u275A\u275A Pause" : "\u25B6 Play", playPressed: playing ? "true" : "false",
+      playAria: playing ? "Pause the outage" : "Play the outage from now to two weeks",
+      playBg: "#F3F5F8", playInk: "#13202E",
+      opts: opts, chips: chips, fit: fit, fitWhy: fitWhy,
+      stageCls: playing ? "" : "paused",
+      headline: R.d.k === "ngs" ? "Never dark more than 30 min" : (R.n === 0 ? "Dark the whole time" : R.n + (R.n === 1 ? " trip" : " trips") + " outside"),
+      sbSetups: sbSetups, sbLens: sbLens, sbHomes: sbHomes, verdict: verdict, tiles: tiles, vsStandby: vsStandby, timeline: timeline, tlEnd: lenLabel,
+      nudgeVacation: function () { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (err) {} var v = self.renderVals(); stopPlay(); jumpTo(42, { playing: false }); setTimeout(function () { var v2 = self.renderVals(); if (!self.state.away) v2.toggleAway(); setTimeout(function () { var v3 = self.renderVals(); if (!self._timer) v3.togglePlay(); }, 120); }, 60); },
+      nudgeChores: function () { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (err) {} stopPlay(); self.setState({ auto: false }); setTimeout(function () { self.renderVals().reset(); }, 30); },
+      nudgeWeek: function () { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (err) {} stopPlay(); jumpTo(168, { playing: false }); },
+      delta: gapText("gas").replace(" more", "")
+    };
+  }
+}
+document.addEventListener('DOMContentLoaded', function () { window.__mount(Component); });

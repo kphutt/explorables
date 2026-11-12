@@ -25,9 +25,8 @@ archive/done-YYYY-MM.md (one file per month). -->
 
 ## Done
 
-- **Minify with esbuild** instead of terser and a regex CSS minifier: one standard tool for
-  JavaScript and CSS, installed with no install script.
-- **backup-power: readable sources and a minify check.** The served files are proven to be
-  exactly what `src/` minifies to, from a clean `npm ci`.
+- **Serve readable source, no minification.** backup-power is served as written, and the npm
+  toolchain is gone (`docs/decisions/0002-serve-readable-source.md`). Earlier, its readable
+  sources were added beside minified files, which terser and then esbuild produced.
 - **Moved from kphutt.com's repository**, with the landing page, the server config, the gate
   and its tests, the container smoke test, the blue-green deploy and the rollback workflow.

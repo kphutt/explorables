@@ -34,7 +34,7 @@ defaults:
 
 jobs:
   # Every check, as steps of one job: the secret scan, the build and its gate, the workflow
-  # check, the unit tests, the minify check and npm audit, then the container, run read-only and smoke-tested on the runner.
+  # check, the unit tests, then the container, run read-only and smoke-tested on the runner.
   # One job because each job is billed and booted separately, and these are seconds of work
   # each. Runs on pull requests too, so a change that breaks the image or a header fails
   # review, not the deploy. The same commands run at pre-push (scripts/local_verify.py).
@@ -69,21 +69,6 @@ jobs:
         run: python3 scripts/check_workflows.py
       - name: Unit tests
         run: python3 -m unittest discover -s scripts -p "test_*.py"
-      # The readable sources: every served file an explorable's src/ minifies to must be
-      # byte-identical to what is committed (scripts/check_minify.py). Node comes from the pin
-      # in mise.toml, with no dependency cache: `npm ci` installs the locked versions fresh.
-      - name: Read the Node pin from mise.toml
-        id: node
-        run: python3 -c 'import re; print("version=" + re.search(r"^node\s*=\s*\"([^\"]+)\"", open("mise.toml").read(), re.M).group(1))' >> "$GITHUB_OUTPUT"
-      - name: Install Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ steps.node.outputs.version }}
-          package-manager-cache: false
-      - name: Check the minified files against their sources
-        run: python3 scripts/check_minify.py
-      - name: Audit the npm dependencies (fails on high or critical)
-        run: npm audit --audit-level=high
       # The check output carries the diagnosis: which page, which inline code or which
       # weakened directive. The job summary renders on the run page and needs no
       # permissions, so it also works for Dependabot's restricted token.
