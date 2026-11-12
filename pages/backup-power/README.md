@@ -13,7 +13,7 @@ Live at <https://explorables.kphutt.com/backup-power/>.
 - `style.css`: the stylesheet, which also loads the self-hosted fonts.
 - Fonts: Inter and Space Grotesk, under the SIL Open Font License, from the shared `pages/assets/fonts/`.
 
-All three are served as written, not minified.
+index.html, app.js and style.css are served as written, not minified.
 
 ## Numbers
 
