@@ -9,11 +9,11 @@ Live at <https://explorables.kphutt.com/backup-power/>.
 ## Files
 
 - `index.html`: the markup, with no inline scripts or event handlers.
-
-All three are served as written, not minified.
 - `app.js`: the simulation and page logic. It fills in the markup with DOM methods, never with HTML strings, and has no `eval`.
 - `style.css`: the stylesheet, which also loads the self-hosted fonts.
 - Fonts: Inter and Space Grotesk, under the SIL Open Font License, from the shared `pages/assets/fonts/`.
+
+All three are served as written, not minified.
 
 ## Numbers
 
