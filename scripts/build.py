@@ -41,6 +41,11 @@ GENERATED = ("robots.txt", "sitemap.xml")
 # The readable-source folder of an explorable: pages/<slug>/src/.
 SOURCES = "src"
 
+# pages/assets/: files several pages share, such as the fonts. Not an explorable, so it is
+# not in the sitemap, and it needs no index.html or README.md. scripts/check.py fails if it
+# holds a page.
+SHARED = "assets"
+
 
 def is_readme(name: str) -> bool:
     return name.lower() == "readme.md"
@@ -48,7 +53,8 @@ def is_readme(name: str) -> bool:
 
 def page_paths(source: Path) -> list[str]:
     """The URL path of every page the sitemap lists: the landing page, then each explorable."""
-    slugs = sorted(p.name for p in source.iterdir() if p.is_dir() and (p / "index.html").is_file())
+    slugs = sorted(p.name for p in source.iterdir()
+                   if p.is_dir() and p.name != SHARED and (p / "index.html").is_file())
     return ["/"] + [f"/{slug}/" for slug in slugs]
 
 

@@ -37,6 +37,21 @@ PAGE = """<!doctype html>
 </html>
 """
 
+LANDING = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Explorables</title>
+<meta name="description" content="The landing page.">
+<link rel="canonical" href="https://explorables.kphutt.com/">
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+<main><a href="/demo/">Demo</a></main>
+</body>
+</html>
+"""
+
 SCRIPT = """import { draw } from "./draw.js";
 document.getElementById("toggle").addEventListener("click", () => draw());
 """
@@ -52,6 +67,10 @@ class Tree:
     def __init__(self, tmp: Path):
         self.source = tmp / "pages"
         shutil.copytree(ce.SOURCE, self.source, ignore=lambda d, names: [n for n in names if n != "README.md" and Path(d, n).is_dir()])
+        # The real landing page links the real explorables and shared assets, which this tree
+        # leaves out, so it gets a landing page of its own. test_the_real_tree_passes checks
+        # the real one.
+        (self.source / "index.html").write_text(LANDING, encoding="utf-8")
         demo = self.source / "demo"
         demo.mkdir()
         (demo / "README.md").write_text("# Demo\n", encoding="utf-8")
@@ -406,6 +425,37 @@ class Layout(GateTest):
     def test_two_build_stages(self):
         self.tree.edit(self.tree.dockerfile, "COPY server/", "FROM scratch\nCOPY server/")
         self.assertFails("pinned by version and digest")
+
+
+class Shared(GateTest):
+    """pages/assets/ holds files the pages share. It is not an explorable."""
+
+    def setUp(self):
+        super().setUp()
+        (self.tree.source / "assets").mkdir()
+        (self.tree.source / "assets" / "shared.woff2").write_bytes(b"wOF2")
+        self.tree.build()
+
+    def test_it_needs_no_index_or_readme(self):
+        self.assertEqual(self.tree.failures(), [])
+
+    def test_it_is_not_in_the_sitemap(self):
+        self.assertNotIn("/assets/", (self.tree.root / "sitemap.xml").read_text(encoding="utf-8"))
+
+    def test_a_page_in_it_fails(self):
+        (self.tree.source / "assets" / "index.html").write_text(PAGE, encoding="utf-8")
+        self.tree.build()
+        self.assertFails("is for shared files, not pages")
+
+    def test_a_page_deeper_in_it_fails(self):
+        (self.tree.source / "assets" / "x").mkdir()
+        (self.tree.source / "assets" / "x" / "a.html").write_text(PAGE, encoding="utf-8")
+        self.tree.build()
+        self.assertFails("is for shared files, not pages: assets/x/a.html")
+
+    def test_a_page_loading_a_shared_font_passes(self):
+        self.tree.edit(self.tree.root / "demo" / "demo.css", 'url("demo.woff2")', 'url("../assets/shared.woff2")')
+        self.assertEqual(self.tree.failures(), [])
 
 
 class Sources(GateTest):

@@ -36,7 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from build import ORIGIN, SOURCES  # noqa: E402
+from build import ORIGIN, SHARED, SOURCES  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 CONFIG = REPO / "server" / "sws.toml"
@@ -122,7 +122,7 @@ def content_encoding(url: str) -> str:
 
 
 def slugs() -> list[str]:
-    return sorted(p.name for p in SOURCE.iterdir() if p.is_dir() and not p.name.startswith("."))
+    return sorted(p.name for p in SOURCE.iterdir() if p.is_dir() and not p.name.startswith(".") and p.name != SHARED)
 
 
 def main() -> int:

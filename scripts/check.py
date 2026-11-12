@@ -18,7 +18,8 @@ Everything else is held to the same rules as kphutt.com, applied by scripts/rule
     X-Frame-Options, HSTS with includeSubDomains and without preload, compression, every
     server feature explorables do not use written out as off (rules.SERVER_FEATURES_OFF),
     idle-timeout of at least 1, and a long but not immutable cache for fonts and favicon.svg;
-  - every pages/<slug>/ has an index.html and a README.md, and no README is in the
+  - every pages/<slug>/ has an index.html and a README.md, pages/assets/ (files the pages
+    share) holds no page, and no README is in the
     output, where the server would serve it;
   - nothing for building is in the output either: no src/ folder of readable sources,
     no node_modules/, package.json, lockfile or source map;
@@ -42,7 +43,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import rules  # noqa: E402
-from build import ORIGIN, SOURCES, page_paths  # noqa: E402
+from build import ORIGIN, SHARED, SOURCES, page_paths  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 SOURCE = REPO / "pages"
@@ -286,7 +287,12 @@ def check_layout(source: Path, root: Path, failures: list) -> None:
         if not (root / name).is_file():
             failures.append(f"{name} missing from the output -- {why}")
     if source.is_dir():
-        for folder in sorted(p for p in source.iterdir() if p.is_dir()):
+        shared = source / SHARED
+        if shared.is_dir():
+            pages = sorted(p.relative_to(source).as_posix() for p in shared.rglob("*.html"))
+            if pages:
+                failures.append(f"pages/{SHARED}/ is for shared files, not pages: {', '.join(pages)}")
+        for folder in sorted(p for p in source.iterdir() if p.is_dir() and p.name != SHARED):
             where = f"pages/{folder.name}/"
             if not SLUG.match(folder.name):
                 failures.append(f"{where}: not a slug (lowercase letters, digits and hyphens)")
@@ -342,7 +348,7 @@ def main() -> int:
         for f in failures:
             print(f"  - {f}")
         return 1
-    slugs = [p.name for p in SOURCE.iterdir() if p.is_dir()]
+    slugs = [p.name for p in SOURCE.iterdir() if p.is_dir() and p.name != SHARED]
     print(f"Explorables check passed: {len(slugs)} explorable(s), all in the sitemap and findable")
     print("in search (only 404.html noindex), each with a title, description and canonical URL,")
     print("no inline code, nothing loaded from another origin, no README, source, tooling or")

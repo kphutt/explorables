@@ -1,16 +1,195 @@
-/* The landing page and the 404 page. Each explorable brings its own stylesheet. */
+/* The landing page and the 404 page, in the storm test's visual language: its fonts, its
+   storm-blue header, its rounded cards. The fonts are the shared ones in assets/fonts/. */
+
+@font-face {
+  font-family: Inter;
+  src: url("/assets/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/assets/fonts/SpaceGrotesk-Variable.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light dark;
+  --storm: #13202E;
+  --storm-ink: #F3F5F8;
+  --sun: #FFC94D;
+  --page: #EEF1F4;
+  --ink: #13202E;
+  --muted: #3B4858;
+  --card: #FFFFFF;
+  --line: #D5DCE3;
+  --link: #2F5BD3;
+  --focus: #2F5BD3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0D1620;
+    --ink: #F3F5F8;
+    --muted: #CBD3DC;
+    --card: #1B2938;
+    --line: #3B4858;
+    --link: #BFD6FF;
+    --focus: #FFC94D;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
   line-height: 1.5;
 }
 
+/* The storm test's page width: 1100px, with at least 16px either side. */
+.wrap {
+  box-sizing: border-box;
+  padding-left: max(16px, calc((100% - 1100px) / 2));
+  padding-right: max(16px, calc((100% - 1100px) / 2));
+}
+
+/* The storm: the page's dark sky, with still rain streaks. */
+.hero {
+  background-color: var(--storm);
+  background-image: repeating-linear-gradient(
+    105deg,
+    rgba(243, 245, 248, 0) 0 22px,
+    rgba(243, 245, 248, 0.07) 22px 23px,
+    rgba(243, 245, 248, 0) 23px 61px
+  );
+  color: var(--storm-ink);
+  padding-top: max(40px, env(safe-area-inset-top, 0px));
+  padding-bottom: 40px;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-size: clamp(40px, 9vw, 64px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.byline {
+  margin: 8px 0 0;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.hero a {
+  color: var(--sun);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.hero a:hover {
+  color: #FFFFFF;
+}
+
 main {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 3rem 1rem;
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The whole card is one link target: the title's link stretches over it (.card h2 a::after),
+   so the link's name is just the title, and the image keeps its own alt text. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(19, 32, 46, 0.08);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(19, 32, 46, 0.18);
+}
+
+.card:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 640 / 427;
+  object-fit: cover;
+  background: var(--storm);
+}
+
+.card-body {
+  padding: 16px 18px 20px;
+}
+
+.card h2 {
+  margin: 0;
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.card h2 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.card h2 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.card h2 a:focus {
+  outline: none;
+}
+
+.card:hover h2 a {
+  color: var(--link);
+}
+
+.card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
 }

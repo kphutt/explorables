@@ -10,7 +10,8 @@ server. They are served at `https://explorables.kphutt.com/<slug>/`.
 
 ## How it works
 
-`pages/` holds the landing page, the 404 page and one folder per explorable.
+`pages/` holds the landing page, the 404 page, one folder per explorable, and `assets/`, the
+fonts and previews the pages share.
 `scripts/build.py` copies it to `public/`, leaving out every `README.md`, and generates
 `robots.txt` and `sitemap.xml`. Pages are served as they are written: there is no build step
 and no minifier (`docs/decisions/0002-serve-readable-source.md`), and Brotli or gzip
@@ -33,9 +34,13 @@ python scripts/local_verify.py                              # all of the CI gate
 
 1. Make a folder `pages/<slug>/`, with a slug of lowercase letters, digits and hyphens. It is
    the page's address: `https://explorables.kphutt.com/<slug>/`.
-2. Put in it an `index.html`, its own script, style, image and font files, and a `README.md`
-   that says what the page is and where its parts came from (a font's license, for one).
-3. Run `python scripts/local_verify.py`. It fails if any of the rules below breaks.
+2. Put in it an `index.html`, its own script, style and image files, and a `README.md` that
+   says what the page is and where its parts came from. Inter and Space Grotesk are already
+   in `pages/assets/fonts/`, with their licenses; another font goes beside them, with its own.
+3. Give it a card on the landing page, `pages/index.html`: a preview image in
+   `pages/assets/previews/<slug>.jpg` with its `width`, `height` and alt text, a title linking
+   to `/<slug>/`, and one line saying what it is.
+4. Run `python scripts/local_verify.py`. It fails if any of the rules below breaks.
 
 The rules:
 
@@ -82,7 +87,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
   ([LICENSE-CONTENT](LICENSE-CONTENT)): the words, numbers and data each explorable presents,
   including the text in its HTML and its README, and its images and screenshots. To reuse it,
   credit kphutt and link to <https://explorables.kphutt.com/>.
-- **Fonts** keep their own licenses, which sit beside them: the bundled Inter and Space
-  Grotesk are under the SIL Open Font License 1.1.
+- **Fonts** keep their own licenses, which sit beside them in `pages/assets/fonts/`: Inter and
+  Space Grotesk are under the SIL Open Font License 1.1.
 - Pages link to the sources they cite. Those sources belong to their owners, and nothing here
   is affiliated with any company a page names.

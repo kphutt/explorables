@@ -7,9 +7,11 @@ static files, nothing that runs on a server. Served from Cloud Run at
 licenses; this file is how the repository works.
 
 ## Layout
-- `pages/`: what is served. The landing page (`index.html`, `index.css`), `404.html`, and one
+- `pages/`: what is served. The landing page (`index.html`, `index.css`), `404.html`, one
   folder per explorable, `pages/<slug>/`, each with its own `index.html`, files and
-  `README.md`.
+  `README.md`, and `pages/assets/`, files several pages share: the fonts, with their
+  licenses, and the landing page's card previews. `assets` is a reserved name, not an
+  explorable; the gate fails if it holds a page.
 - `server/sws.toml`: the static-web-server config, which holds every response header. It is a
   security policy; `scripts/check.py` fails the build if it weakens.
 - `Dockerfile`: the server image plus the checked build, nothing else.
