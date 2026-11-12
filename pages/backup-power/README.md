@@ -17,7 +17,7 @@ index.html, app.js and style.css are served as written, not minified.
 
 ## Numbers
 
-Prices, weights, tank sizes, noise, refill and oil-check intervals, and the fridge rule come from the sources below. Prices were checked on November 11, 2026. Everything else is illustrative, such as household use of about 400 W, 85% of the battery usable, chore times, gas runs and the weather.
+Prices, weights, tank sizes, noise, refill and oil-check intervals, and the fridge rule come from the sources below. Prices were checked on November 11, 2026. The household, two people of whom only one drives, is invented for the example. Everything else is illustrative too, such as household use of about 400 W, 85% of the battery usable, chore times, gas runs and the weather.
 
 Information only, not professional advice. Not affiliated with any company named here.
 
