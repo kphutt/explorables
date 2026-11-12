@@ -1,94 +1,83 @@
 # Explorables
 
 Interactive pages that go with posts on [kphutt.com](https://kphutt.com/). Each one is a
-standalone page: its own HTML, script, styles, images and fonts, with nothing running on a
-server. They are served at `https://explorables.kphutt.com/<slug>/`.
+standalone static page, served at `https://explorables.kphutt.com/<slug>/`.
 
 | Explorable | What it is |
 |---|---|
-| [backup-power](https://explorables.kphutt.com/backup-power/) | The storm test: five houses ride out the same two-week winter power outage, each with a different backup. |
+| [backup-power](https://explorables.kphutt.com/backup-power/) | Five houses ride out the same two-week winter power outage, each with a different backup. |
 
 ## How it works
 
-`pages/` holds the landing page, the 404 page, one folder per explorable, and `assets/`, the
-fonts and previews the pages share.
-`scripts/build.py` copies it to `public/`, leaving out every `README.md`, and generates
-`robots.txt` and `sitemap.xml`. Pages are served as they are written: there is no build step
-and no minifier (`docs/decisions/0002-serve-readable-source.md`), and Brotli or gzip
-compression shrinks them in transit. `scripts/check.py` then checks that
-output against the rules below. The `Dockerfile` puts the checked output behind
-[static-web-server](https://static-web-server.net), with the headers in `server/sws.toml`.
+`pages/` holds the landing page, the 404 page and one folder per explorable. Its `assets/`
+folder holds the fonts, icon and card previews the pages share. Pages are served as written,
+without a minifier or npm.
 
-On every pull request, GitHub Actions runs the gate, builds the container and smoke-tests it.
-On a merge to `main` it deploys to Cloud Run, blue-green: the new revision starts with no
-traffic, is smoke-tested at its own URL, and only then gets all of it. If the smoke test fails,
-the old revision keeps serving. `AGENTS.md` has the details.
+The build script copies the pages to `public/`, leaving out the READMEs. It also generates
+the robots file, the sitemap and an llms.txt, which welcome every crawler and list the
+explorables. `scripts/check.py` checks that output against the rules below. The `Dockerfile`
+serves the checked output with [static-web-server](https://static-web-server.net).
+
+Each pull request runs the checks and smoke-tests the container. A merge to `main` deploys to
+Cloud Run, blue-green. The new revision is smoke-tested at its own URL before it gets any
+visitors, so a failed test leaves the old one serving. [AGENTS.md](AGENTS.md) has the details.
 
 ```bash
 python scripts/build.py && python scripts/check.py public   # build and check
-python -m unittest discover -s scripts -p "test_*.py"       # the gate's own tests
-python scripts/local_verify.py                              # all of the CI gate, locally
+python scripts/local_verify.py                              # build, checks and unit tests
 ```
 
 ## Adding an explorable
 
-1. Make a folder `pages/<slug>/`, with a slug of lowercase letters, digits and hyphens. It is
-   the page's address: `https://explorables.kphutt.com/<slug>/`.
-2. Put in it an `index.html`, its own script, style and image files, and a `README.md` that
-   says what the page is and where its parts came from. Inter and Space Grotesk are already
-   in `pages/assets/fonts/`, with their licenses; another font goes beside them, with its own.
-3. Give it a card on the landing page, `pages/index.html`: a preview image in
-   `pages/assets/previews/<slug>.jpg` with its `width`, `height` and alt text, a title linking
-   to `/<slug>/`, and one line saying what it is.
-4. Run `python scripts/local_verify.py`. It fails if any of the rules below breaks.
+1. Make a folder `pages/<slug>/`. The slug is lowercase letters, digits and hyphens, and it
+   becomes the page's address. The name `assets` is taken.
+2. Put the page's `index.html`, scripts, styles and images in it. Add a README that says what
+   the page is and where its parts came from.
+3. Use the shared fonts, or add a font to `pages/assets/fonts/` with its license.
+4. Add a card to the landing page, `pages/index.html`, with a preview image, a title linking
+   to the page, and one line saying what it is. The image goes in `pages/assets/previews/`.
+5. Run `python scripts/local_verify.py`. It catches markup that breaks a rule.
+6. Run the container, as [AGENTS.md](AGENTS.md) shows, and use the page through it with the
+   browser console open. The server's headers make the browser block anything the check
+   script misses.
 
 The rules:
 
-- Every page can be found in search: no `noindex`. Only `404.html` has one.
-- Every page has a `<title>`, a `<meta name="description">` and a `<link rel="canonical">` to
-  its own absolute URL, such as `https://explorables.kphutt.com/<slug>/`.
-- Scripts and styles are files, loaded with `<script src>` and `<link rel="stylesheet">`. No
-  inline `<script>` or `<style>`, no `style=` or `on...=` attributes, no `javascript:` URLs.
-- Everything a page loads comes from this origin, by a relative URL. That includes fonts:
-  bundle them, with their license.
-- No network calls. The policy's `connect-src` names only this site's own `robots.txt` (so
-  Lighthouse can read it), so `fetch` and the like are blocked for everything else.
-- Trusted Types are required, and no policy may be created. Build the page with DOM methods
-  (`textContent`, `createElement`) rather than by assigning strings to `innerHTML`. Set styles
-  through the CSSOM (`element.style`), never a `style=` attribute.
-- No dot-files, and no build tooling: READMEs stay in the repository and are never served, and
-  the gate refuses a `src/` folder, `node_modules/`, `package.json`, lockfile or source map in
-  the output.
+| Rule | What it means |
+|---|---|
+| Findable | A `<title>`, a `<meta name="description">`, a canonical link to the page's own absolute URL, and an icon link. Only `404.html` has a `noindex` meta tag. |
+| No inline code | Scripts and styles are files. No inline `<script>` except a JSON-LD data block, and no `<style>`, `style=`, `on...=` or `javascript:` URL. |
+| One origin | Everything a page loads comes from this site by a relative URL, fonts included. |
+| No network calls | Scripts fetch nothing. The policy allows this site's `robots.txt` alone, because Lighthouse fetches it from inside the page. |
+| No HTML strings | Trusted Types block handing a string to `innerHTML`. Build the DOM with `createElement` and `textContent`, and set styles through `element.style`. |
+| No build tooling | No dot-files, and no `src/` folder, `node_modules/`, `package.json`, npm lockfile or source map in the output. |
 
 ## Security model
 
-Each explorable runs its own JavaScript, so the pages live on their own origin. A browser
-keeps `explorables.kphutt.com` and `kphutt.com` apart, so nothing a page here does can reach
-the main site, and the main site keeps a policy with no script at all.
+Explorables run their own JavaScript, so they live on a separate origin,
+`explorables.kphutt.com`. A browser keeps that apart from kphutt.com, so the main site can
+keep a policy that allows no script.
 
-Every response, the 404 page included, carries a strict Content-Security-Policy: scripts,
-styles, images and fonts from this origin only, no inline code, no network calls except to its own robots.txt, and
-Trusted Types with no policy allowed. It also sets HSTS, `X-Frame-Options: DENY`,
-cross-origin isolation (COOP, COEP and CORP), `Referrer-Policy: no-referrer` and a
-Permissions-Policy that turns off the camera, microphone, location and the rest. The policy
-is written once, in `server/sws.toml`. `scripts/check.py` fails the build if any of it gets
-weaker, and `scripts/smoke.py` checks that a running server sends exactly those headers.
+Every response, the 404 page included, carries a Content-Security-Policy. It blocks inline
+code, loads from other origins and every network call but the robots.txt fetch. Each response
+also sends HSTS, cross-origin isolation and a ban on framing. Referrers are not sent, and the camera, microphone and location
+are off. The headers live in `server/sws.toml`. The checks fail if any of them weakens, and the
+smoke test checks that a running server sends them.
 
-Deploys are keyless. GitHub's OIDC token is exchanged for a short-lived Google identity that
-can deploy this one Cloud Run service and nothing else, and only from `main`. No service
-account key exists.
+Deploys are keyless. GitHub's OIDC token becomes a short-lived Google identity. It can push
+only this site's images and deploy only its Cloud Run service, and only from `main`.
 
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Licenses
 
-- **Code** is under the Apache License 2.0 ([LICENSE](LICENSE)): the scripts, the server
+- Code is under the Apache License 2.0 ([LICENSE](LICENSE)): the scripts, the server
   configuration, the workflows, and each page's markup, script and styles.
-- **Content** is under Creative Commons Attribution 4.0 International
-  ([LICENSE-CONTENT](LICENSE-CONTENT)): the words, numbers and data each explorable presents,
-  including the text in its HTML and its README, and its images and screenshots. To reuse it,
-  credit kphutt and link to <https://explorables.kphutt.com/>.
-- **Fonts** keep their own licenses, which sit beside them in `pages/assets/fonts/`: Inter and
+- Content is under Creative Commons Attribution 4.0 International
+  ([LICENSE-CONTENT](LICENSE-CONTENT)): the words, numbers, data, images and screenshots each
+  explorable presents, in its HTML and its README. To reuse it, credit kphutt and link to
+  <https://explorables.kphutt.com/>.
+- Fonts keep their own licenses, which are beside them in `pages/assets/fonts/`. Inter and
   Space Grotesk are under the SIL Open Font License 1.1.
 - Pages link to the sources they cite. Those sources belong to their owners, and nothing here
   is affiliated with any company a page names.
