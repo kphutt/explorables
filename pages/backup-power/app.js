@@ -308,7 +308,7 @@ class Component extends DCLogic {
           var due = x0 + SB_OIL;
           if (!present(due)) { oilDue = due; if (H >= 1e9) break; due = H; }
           nOil++;
-          x0 = oilCheck(due, 0.5, nOil % 2 ? "Husband" : "Wife", "Daily oil check, off 30 minutes", (due > x0 + SB_OIL ? "Home from vacation; it ran with nobody checking the oil. " : "") + "Every 24 hours: shut it off for 30 minutes, check and top up the oil, restart.");
+          x0 = oilCheck(due, 0.5, nOil % 2 ? "Other person" : "Driver", "Daily oil check, off 30 minutes", (due > x0 + SB_OIL ? "Home from vacation; it ran with nobody checking the oil. " : "") + "Every 24 hours: shut it off for 30 minutes, check and top up the oil, restart.");
         }
         return out();
       }
@@ -320,7 +320,7 @@ class Component extends DCLogic {
       if (x >= 1e9) return out();
       var back = x > 0 ? "Home from vacation, house dark. " : "";
       if (d.batt) {
-        var sb0 = job(x, SU, "setup", "Wife", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
+        var sb0 = job(x, SU, "setup", "Driver", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
         dark.push([x, sb0 + SU]);
         battEnd = sb0 + SU + BATT_H;
         if (d.gen === "none") { dark.push([battEnd, 1e9]); return out(); }
@@ -332,7 +332,7 @@ class Component extends DCLogic {
       }
       var k = 0;
       function setup(at, prefix) {
-        var s = job(at, SU, "setup", "Husband", setupGen[0], prefix + setupGen[1], "Go outside", "gen");
+        var s = job(at, SU, "setup", "Other person", setupGen[0], prefix + setupGen[1], "Go outside", "gen");
         dark.push([at, s + SU]);
         return s + SU;
       }
@@ -343,7 +343,7 @@ class Component extends DCLogic {
         if (LL < 1e9 && LL < ev && H > x) {  // leaving during this run (or while it was still being set up)
           var P = Math.max(LL, x); LL = 1e9;
           if (d.gen === "gas") gasRuns.push([x, P]);
-          job(P, 0.25, "pack", "Husband", "Packing it up before leaving", "Leaving? It can't run with nobody home. Shut it off, let it cool, unhook it, roll it back in.", "Pack it up", "gen");
+          job(P, 0.25, "pack", "Other person", "Packing it up before leaving", "Leaving? It can't run with nobody home. Shut it off, let it cool, unhook it, roll it back in.", "Pack it up", "gen");
           dark.push([P, H]);
           if (H >= 1e9) break;
           x = setup(H, "Home from vacation, house dark. ");
@@ -352,13 +352,13 @@ class Component extends DCLogic {
         if (d.gen === "gas") {
           gasRuns.push([x, ev]); k++;
           var far = k % 4 === 3, ready = 0;
-          if (k >= 3 && k % 2 === 1) { var td = far ? 2.5 : 1.5; ready = job(ev - (far ? 4 : 3), td, "trip", "Wife", far ? "Nearest station had no power; driving farther" : "Driving out for gas, if a station has power", "Gas cans are empty. The husband doesn't drive anymore, so the wife goes, in this weather, hoping a station has power.", "Drive to the station") + td; }
-          var rs = job(Math.max(ev, ready), 0.25, "refill", k % 2 ? "Husband" : "Wife", "Refilling and checking oil, engine off", "Tank almost empty. Go out, shut it off, let it cool, refill, check the oil.", "Go refill it");
+          if (k >= 3 && k % 2 === 1) { var td = far ? 2.5 : 1.5; ready = job(ev - (far ? 4 : 3), td, "trip", "Driver", far ? "Nearest station had no power; driving farther" : "Driving out for gas, if a station has power", "Gas cans are empty. Only the driver can go, in this weather, hoping a station has power.", "Drive to the station") + td; }
+          var rs = job(Math.max(ev, ready), 0.25, "refill", k % 2 ? "Other person" : "Driver", "Refilling and checking oil, engine off", "Tank almost empty. Go out, shut it off, let it cool, refill, check the oil.", "Go refill it");
           dark.push([ev, rs + 0.25]);
           x = rs + 0.25;
         } else {
           nOil++;
-          x = oilCheck(ev, 0.25, nOil % 2 ? "Husband" : "Wife", "Oil check, engine off", "Every 8 hours: go out, shut it off, check and top up the oil, restart.");
+          x = oilCheck(ev, 0.25, nOil % 2 ? "Other person" : "Driver", "Oil check, engine off", "Every 8 hours: go out, shut it off, check and top up the oil, restart.");
         }
       }
       return out();
@@ -370,7 +370,7 @@ class Component extends DCLogic {
         if (x > 0) dark.push([0, x]);
         if (x >= 1e9) return out();
         var back = x > 0 ? "Home from vacation, house dark. " : "";
-        var s1 = job(x, 0.25, "setup", "Wife", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
+        var s1 = job(x, 0.25, "setup", "Driver", "Plugging in the battery", back + "Run the cord from the battery to the outside plug and flip the panel switch.", "Plug it in", "batt");
         if (s1 > x) dark.push([x, s1 + 0.25]);  // plugged in late: dark until the plug-in is done
         var LL = L;
         var t0 = setupGen(s1 + 0.25, "Push out the 263 lb generator and connect it to the battery. After this, the phone app starts and stops it.", s1 + 0.25 + BATT_H);
@@ -385,8 +385,8 @@ class Component extends DCLogic {
             if (r > t0) {
               k++;
               var ready = 0;
-              if (k >= 3 && k % 2 === 1 && r - 18 > t0) ready = job(r - 18, 1.5, "trip", "Wife", "Driving out for gas, if a station has power", "Gas cans are empty. The husband doesn't drive anymore, so the wife goes, hoping a station has power.", "Drive to the station") + 1.5;
-              var rs = job(Math.max(r, ready), 0.25, "refill", k % 2 ? "Husband" : "Wife", "Morning refill and oil check; the battery covers", "Morning: go out, refill the generator and check the oil. The battery keeps the house on meanwhile.", "Go refill it");
+              if (k >= 3 && k % 2 === 1 && r - 18 > t0) ready = job(r - 18, 1.5, "trip", "Driver", "Driving out for gas, if a station has power", "Gas cans are empty. Only the driver can go, hoping a station has power.", "Drive to the station") + 1.5;
+              var rs = job(Math.max(r, ready), 0.25, "refill", k % 2 ? "Other person" : "Driver", "Morning refill and oil check; the battery covers", "Morning: go out, refill the generator and check the oil. The battery keeps the house on meanwhile.", "Go refill it");
               var battDie = r - 8 + BATT_H;  // the battery carried the night from 11 PM
               if (rs > battDie) dark.push([battDie, rs + 0.25]);  // battery ran out before the refill: dark until it's done
               s0 = Math.max(s0, rs);
@@ -400,7 +400,7 @@ class Component extends DCLogic {
             if (e0 > s0) gasRuns.push([s0, e0]);
           }
           if (stopAt >= 400) break;
-          job(LL, 0.25, "pack", "Husband", "Packing up the generator before leaving", "Leaving? The generator can't run with nobody home. Shut it off, unhook it, roll it back in. The battery stays plugged in.", "Pack it up", "gen");
+          job(LL, 0.25, "pack", "Other person", "Packing up the generator before leaving", "Leaving? The generator can't run with nobody home. Shut it off, unhook it, roll it back in. The battery stays plugged in.", "Pack it up", "gen");
           var rem = comboOn(LL) ? BATT_H : Math.max(0, BATT_H - (LL - lastOffStart(LL)));
           var dk = LL + rem;
           if (H >= 1e9) { dark.push([dk, 1e9]); break; }
@@ -411,7 +411,7 @@ class Component extends DCLogic {
         return out();
       }
       function setupGen(at, ask, battDeadAt) {
-        var s = job(at, 0.5, "setup", "Husband", "Pushing out the 263 lb generator", ask, "Go outside", "gen");
+        var s = job(at, 0.5, "setup", "Other person", "Pushing out the 263 lb generator", ask, "Go outside", "gen");
         if (s > battDeadAt) dark.push([battDeadAt, s + 0.5]);
         return s + 0.5;
       }
@@ -471,7 +471,7 @@ class Component extends DCLogic {
       r.plan.chores.forEach(function (c) {
         if (c.wait) return;
         events.push(c);
-        if (c.kind === "trip") events.push({ a: c.b - 0.5, b: c.b, kind: "tripback", home: d.short, who: "Wife", ask: "Fill the cans, lift about 60 lb of gas into the car, drive home in this weather.", btn: "Drive home" });
+        if (c.kind === "trip") events.push({ a: c.b - 0.5, b: c.b, kind: "tripback", home: d.short, who: "Driver", ask: "Fill the cans, lift about 60 lb of gas into the car, drive home in this weather.", btn: "Drive home" });
       });
       var cover;
       if (t === 0) cover = d.gen === "ngs" ? "Starts by itself in about 30 seconds" : (away ? "Nobody home to set it up" : "Waiting for someone to set it up");
@@ -492,7 +492,7 @@ class Component extends DCLogic {
         now = w0.kind === "oil" && late > OIL_GRACE ? "Oil unchecked " + dur(late) + ": it shut itself off" : "Needs the " + w0.who.toLowerCase() + (late >= 0.25 ? " \u00B7 " + (late < 1 ? Math.round(late * 60) + " min" : dur(late)) + " late" : " outside");
         nowInk = r.on ? "#B4480C" : "#9B1C1C";
       }
-      else if (c) { now = slipping ? c.who + " slipped outside; caught " + (c.who === "Wife" ? "herself" : "himself") : c.who + ": " + c.text.charAt(0).toLowerCase() + c.text.slice(1); nowInk = "#B4480C"; }
+      else if (c) { now = slipping ? c.who + " slipped outside; caught themselves" : c.who + ": " + c.text.charAt(0).toLowerCase() + c.text.slice(1); nowInk = "#B4480C"; }
       else if (!present(t) && !r.on) { now = "Dark: away on vacation"; nowInk = "#9B1C1C"; }
       else if (d.gen === "ngs" && !present(t)) { now = r.plan.oilDue != null && t > r.plan.oilDue ? "Nobody home: oil unchecked " + dur(t - r.plan.oilDue + 24) : "Nobody home: running"; nowInk = r.plan.oilDue != null && t > r.plan.oilDue ? "#B4480C" : "#14532D"; }
       else if (!present(t)) {
@@ -533,12 +533,12 @@ class Component extends DCLogic {
           var P = 0, N = 0;
           r.plan.chores.forEach(function (ch) {
             var done = !ch.wait && ch.a <= t;
-            if (done) { if (ch.who === "Husband") P++; else N++; }
+            if (done) { if (ch.who === "Other person") P++; else N++; }
           });
-          return "Husband " + P + " \u00B7 Wife " + N;
+          return "Driver " + N + " \u00B7 Other " + P;
         })(),
         outsInk: d.gen === "ngs" ? "#8EE3A8" : "#FFB27A",
-        who: c ? c.who : "", pColor: c && c.who === "Wife" ? "#F27BC0" : "#FF8A3D",
+        who: c ? c.who : "", pColor: c && c.who === "Driver" ? "#F27BC0" : "#FF8A3D",
         trunkX: TREE[d.k][0], trunkY: TREE[d.k][1], trunkW: TREE[d.k][2], trunkH: TREE[d.k][3], treeD: TREE[d.k][4], treeFill: TREE[d.k][5], treeD2: TREE[d.k][6], swayCls: TREE[d.k][7],
         leafOp: d.k === LEAF.k && t >= LEAF.at ? "0" : "1",
         bareOp: d.k === LEAF.k && t >= LEAF.at ? "1" : "0",
@@ -634,8 +634,8 @@ class Component extends DCLogic {
       var hw = HOME_OPTS[homeKey], d = defs.filter(function (x) { return x.k === k; })[0];
       var P = makePlanner(hw[0], hw[1]).plan(d);
       var ch = P.chores.filter(function (c) { return c.a < T; });
-      var husband = ch.filter(function (c) { return c.who === "Husband"; }).length;
-      var wife = ch.length - husband;
+      var other = ch.filter(function (c) { return c.who === "Other person"; }).length;
+      var driver = ch.length - other;
       var hard = ch.filter(function (c) { return hardAt(c.a); }).length;
       var runs = ch.filter(function (c) { return c.kind === "trip"; }).length;
       var gh = 0; P.gasRuns.forEach(function (g) { gh += Math.max(0, Math.min(T, g[1]) - g[0]); });
@@ -644,7 +644,7 @@ class Component extends DCLogic {
       iv.forEach(function (x) { var m = merged[merged.length - 1]; if (m && x[0] <= m[1] + 0.01) m[1] = Math.max(m[1], x[1]); else merged.push([x[0], x[1]]); });
       var darkH = 0, longest = 0; merged.forEach(function (x) { darkH += x[1] - x[0]; longest = Math.max(longest, x[1] - x[0]); });
       var spoil = merged.filter(function (x) { return x[1] - x[0] >= 4; }).length;
-      return { spoil: spoil, d: d, chores: ch, n: ch.length, husband: husband, wife: wife, hard: hard, runs: runs, gal: Math.round(gh * GPH), darkH: darkH, longest: longest, dark: merged };
+      return { spoil: spoil, d: d, chores: ch, n: ch.length, other: other, driver: driver, hard: hard, runs: runs, gal: Math.round(gh * GPH), darkH: darkH, longest: longest, dark: merged };
     }
     function hrs(h) { return h < 1 ? (h < 0.05 ? "none" : "under 1 h") : (h < 48 ? Math.round(h) + " h" : (Math.round(h / 24 * 10) / 10) + " days"); }
     var R = runSandbox(SB.k, SB.T, SB.home), RS = runSandbox("ngs", SB.T, SB.home);
@@ -661,11 +661,11 @@ class Component extends DCLogic {
     if (R.d.k === "ngs") verdict = lenLabel + ", " + where + ": the standby is never dark longer than " + (R.longest <= 0.6 ? "30 minutes" : hrs(R.longest)) + ". " + (R.n ? "Its only chore is a short oil check about once a day (" + R.n + " in all)." : (SB.T <= 24 ? "Nothing to do in the first day." : "")) + (SB.home !== "home" && SB.T > 24 ? " While nobody is home, nobody checks the oil; Generac advises a check every 24 hours in long outages." : "");
     else if (R.n === 0) verdict = lenLabel + ", " + where + ": nobody can set it up, so the house is dark the whole time" + (R.spoil ? " and the fridge food is lost" + (R.longest >= 48 ? ", freezer too." : ".") : ".");
     else if (R.d.k !== "ngs" && false) verdict = "";
-    else verdict = lenLabel + ", " + where + ": " + R.n + (R.n === 1 ? " trip" : " trips") + " outside" + (R.hard ? ", " + R.hard + " of them at night" : "") + (R.runs ? ", and " + R.runs + " drive" + (R.runs > 1 ? "s" : "") + " for gas by the wife" : "") + (R.darkH < 0.05 ? ". Never dark" : ". Dark for " + hrs(R.darkH) + " in all") + (R.spoil ? ", and the fridge food is lost." : "; the fridge stays cold.");
+    else verdict = lenLabel + ", " + where + ": " + R.n + (R.n === 1 ? " trip" : " trips") + " outside" + (R.hard ? ", " + R.hard + " of them at night" : "") + (R.runs ? ", and " + R.runs + " drive" + (R.runs > 1 ? "s" : "") + " for gas by the driver" : "") + (R.darkH < 0.05 ? ". Never dark" : ". Dark for " + hrs(R.darkH) + " in all") + (R.spoil ? ", and the fridge food is lost." : "; the fridge stays cold.");
     var tiles = [
-      ["Trips outside", String(R.n), "Husband " + R.husband + " \u00B7 Wife " + R.wife],
+      ["Trips outside", String(R.n), "Driver " + R.driver + " \u00B7 Other " + R.other],
       ["At night (8 PM to 7 AM)", String(R.hard), R.n ? Math.round(R.hard / R.n * 100) + "% of trips" : "none"],
-      ["Gas runs (wife drives; this storm, illustrative)", String(R.runs), R.gal ? R.gal + " gal burned" : "no gasoline"],
+      ["Gas runs (the driver goes; this storm, illustrative)", String(R.runs), R.gal ? R.gal + " gal burned" : "no gasoline"],
       ["Hours dark", hrs(R.darkH), "of " + lenLabel],
       ["Fridge food", R.spoil ? "Lost" : "Safe", R.spoil ? (R.longest >= 48 ? "freezer too: dark " + hrs(R.longest) + " (USDA: 4 h fridge, 48 h full freezer)" : "dark " + hrs(R.longest) + " at once; USDA says 4 h") : "never dark 4 h at once"],
       ["Longest without heat", hrs(R.longest), R.longest >= 4 ? "gas furnace needs power to run" : "furnace keeps running"],
