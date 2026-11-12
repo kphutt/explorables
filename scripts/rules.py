@@ -15,6 +15,7 @@ rules are unchanged; only the site's defaults are gone.
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from pathlib import Path
@@ -81,6 +82,34 @@ JSON_LD = re.compile(r"""(?:^|\s)type\s*=\s*["']?application/ld\+json["']?(?:\s|
 # A src attribute on its own, not data-src or similar.
 SRC_ATTR = re.compile(r"""(?:^|\s)src\s*=""", re.I)
 
+# Any type attribute. A browser reads only the first of two, so a second one could hide a
+# script typed as JavaScript behind a JSON-LD type later in the tag. An attribute can
+# follow whitespace, a quote or a slash.
+TYPE_ATTR = re.compile(r"""(?:^|[\s"'/])type\s*=""", re.I)
+
+
+def json_ld_problem(attrs: str, body: str):
+    """Why a <script type="application/ld+json"> block is not plain data, or None.
+
+    A data block is never run, so the policy has nothing to allow for it. That only holds
+    for exactly what search engines read: one type attribute, no src, and a body that is a
+    JSON object or array. "<!--" and "<script" inside a script element change where the
+    browser ends it, so neither may appear.
+    """
+    if len(TYPE_ATTR.findall(attrs)) != 1:
+        return "has more than one type attribute"
+    if SRC_ATTR.search(attrs):
+        return "has a src attribute"
+    if "<!--" in body or re.search(r"<script", body, re.I):
+        return 'contains "<!--" or "<script", which changes where the element ends'
+    try:
+        data = json.loads(body)
+    except ValueError as e:
+        return f"is not valid JSON ({e})"
+    if not isinstance(data, (dict, list)):
+        return "is not a JSON object or array"
+    return None
+
 
 def check_inline_code(root: Path, failures: list) -> None:
     """The built pages must contain no code the policy would have to allow.
@@ -89,7 +118,8 @@ def check_inline_code(root: Path, failures: list) -> None:
     if the pages contain nothing that needs them. So look for every form of inline code:
     inline scripts, <style> elements, style= attributes, event-handler attributes and
     javascript: URLs. A <script src=...> with nothing between its tags is allowed; where it
-    points is check.py's to check. JSON-LD is data, not executed, so it stays.
+    points is check.py's to check. JSON-LD is data, not executed, so it stays, as long as
+    it is only data (json_ld_problem).
     """
     # SVG files are documents too: opened directly, one can carry script or handlers.
     for path in sorted([*root.rglob("*.html"), *root.rglob("*.svg")]):
@@ -98,6 +128,9 @@ def check_inline_code(root: Path, failures: list) -> None:
 
         for attrs, body in re.findall(r"<script\b([^>]*)>(.*?)</script\s*>", html, re.S | re.I):
             if JSON_LD.search(attrs):
+                problem = json_ld_problem(attrs, body)
+                if problem:
+                    failures.append(f"{page}: JSON-LD block {problem}")
                 continue
             if SRC_ATTR.search(attrs) and not body.strip():
                 continue

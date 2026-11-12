@@ -140,6 +140,63 @@ class Passing(GateTest):
         self.assertFalse((self.tree.root / "demo" / "src").exists())
 
 
+class JsonLd(GateTest):
+    """JSON-LD is the one <script> with a body a page may carry, and only as plain data."""
+
+    GOOD = '{"@context":"https://schema.org","@type":"CreativeWork","name":"Demo"}'
+
+    def add(self, html: str) -> None:
+        self.tree.edit(self.page(), "</head>", html + "</head>")
+
+    def test_a_json_ld_object_passes(self):
+        self.add(f'<script type="application/ld+json">{self.GOOD}</script>')
+        self.assertEqual(self.tree.failures(), [])
+
+    def test_a_json_ld_array_passes(self):
+        self.add(f"<script type=application/ld+json>[{self.GOOD}]</script>")
+        self.assertEqual(self.tree.failures(), [])
+
+    def test_javascript_typed_script_still_fails(self):
+        self.add('<script type="text/javascript">alert(1)</script>')
+        self.assertFails("inline script")
+
+    def test_a_type_that_only_contains_ld_json_fails(self):
+        self.add('<script type="application/ld+json+js">alert(1)</script>')
+        self.assertFails("inline script")
+
+    def test_invalid_json_fails(self):
+        self.add('<script type="application/ld+json">alert(1)</script>')
+        self.assertFails("is not valid JSON")
+
+    def test_a_json_scalar_fails(self):
+        self.add('<script type="application/ld+json">"text"</script>')
+        self.assertFails("not a JSON object or array")
+
+    def test_a_second_type_attribute_fails(self):
+        self.add(f'<script type="text/javascript" type="application/ld+json">{self.GOOD}</script>')
+        self.assertFails("more than one type attribute")
+
+    def test_a_second_type_attribute_after_a_quote_fails(self):
+        self.add(f'<script id="x"type="text/javascript" type="application/ld+json">{self.GOOD}</script>')
+        self.assertFails("more than one type attribute")
+
+    def test_a_src_attribute_fails(self):
+        self.add(f'<script type="application/ld+json" src="a.json">{self.GOOD}</script>')
+        self.assertFails("has a src attribute")
+
+    def test_a_comment_opener_fails(self):
+        self.add('<script type="application/ld+json">{"a":"<!--"}</script>')
+        self.assertFails("changes where the element ends")
+
+    def test_a_script_tag_inside_fails(self):
+        self.add('<script type="application/ld+json">{"a":"<SCRIPT"}</script>')
+        self.assertFails("changes where the element ends")
+
+    def test_data_type_attribute_is_not_a_second_type(self):
+        self.add(f'<script data-type="x" type="application/ld+json">{self.GOOD}</script>')
+        self.assertEqual(self.tree.failures(), [])
+
+
 class InlineCode(GateTest):
     def test_inline_script(self):
         self.tree.edit(self.page(), "</body>", "<script>alert(1)</script></body>")
