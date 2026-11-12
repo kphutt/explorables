@@ -8,6 +8,7 @@ Everything else is held to the same rules as kphutt.com, applied by scripts/rule
   - no inline code: no inline <script>, no <style> element, no style= or on...= attribute,
     no javascript: URL;
   - nothing loaded from another origin, by any page, stylesheet or script module;
+  - every page, 404.html included, links an icon, so no browser asks for /favicon.ico;
   - every page can be found in search: no page but 404.html says noindex, by meta tag or
     X-Robots-Tag header, and each has a title, a description and its own canonical URL.
     404.html must say noindex;
@@ -198,6 +199,11 @@ def check_pages(root: Path, failures: list) -> None:
         page = path.relative_to(root).as_posix()
 
         metas = [attributes(t) for t in re.findall(r"<meta\b[^>]*>", html, re.I)]
+        links = [attributes(t) for t in re.findall(r"<link\b[^>]*>", html, re.I)]
+        # Without one, the browser asks for /favicon.ico, gets a 404 and logs an error. Where
+        # it points is held to the broken-reference check below.
+        if not any("icon" in a.get("rel", "").lower().split() and a.get("href") for a in links):
+            failures.append(f'{page}: no <link rel="icon" href=...>, so the browser would ask for /favicon.ico')
         # robots, and any one crawler by name (googlebot, bingbot).
         robots = [a for a in metas if a.get("name", "").lower() == "robots" or a.get("name", "").lower().endswith("bot")]
         says_noindex = any(hides(a.get("content", "")) for a in robots)
@@ -213,7 +219,6 @@ def check_pages(root: Path, failures: list) -> None:
             descriptions = [a.get("content", "") for a in metas if a.get("name", "").lower() == "description"]
             if len(descriptions) != 1 or not descriptions[0].strip():
                 failures.append(f'{page}: needs exactly one non-empty <meta name="description">')
-            links = [attributes(t) for t in re.findall(r"<link\b[^>]*>", html, re.I)]
             canonical = [a.get("href") for a in links if "canonical" in a.get("rel", "").lower().split()]
             if canonical != [page_url(page)]:
                 failures.append(f"{page}: canonical link is {canonical}, expected [{page_url(page)!r}]")

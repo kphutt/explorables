@@ -15,6 +15,8 @@ What it checks, against BASE:
   - every README path is a 404: the READMEs are for the repository and never served. So is
     every file of an explorable's readable sources (pages/<slug>/src/);
   - a missing page returns 404 with pages/404.html, not the server's built-in page;
+  - the feature switches in server/sws.toml took effect: the landing page has no ETag, and
+    /health and /metrics are 404s;
   - HTML, CSS, JavaScript and SVG come back compressed when the browser asks for it;
   - every one of those responses carries exactly the headers of the catch-all rule in
     server/sws.toml, Cache-Control included. The expected values are read from that file,
@@ -146,7 +148,13 @@ def main() -> int:
         return headers, body
 
     # A cold instance or a tagged URL still being set up gets about thirty seconds.
-    check("/", content_type="text/html", attempts=10)
+    home_headers, _ = check("/", content_type="text/html", attempts=10)
+    # Proof that the feature switches in the config took effect, not just that the file says
+    # so: a renamed key is only warned about, and the server falls back to its default.
+    if "ETag" in home_headers:
+        failures.append("/: has an ETag header, so etag = false did not take effect")
+    check("/health", status=404, content_type="text/html")
+    check("/metrics", status=404, content_type="text/html")
     check("/index.css", content_type="text/css")
     check("/README.md", status=404, content_type="text/html")
 

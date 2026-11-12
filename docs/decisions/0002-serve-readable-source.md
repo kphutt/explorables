@@ -33,6 +33,9 @@ Pages are committed readable and served as they are. No minifier, no npm toolcha
   and "View source" is readable.
 - About 5 KB more per first visit for backup-power, after compression.
 - Lighthouse may flag "Minify JavaScript" (and CSS). That is expected and accepted here.
+- Lighthouse's SEO score is 92, not 100, on every page, because it fetches `robots.txt` from
+  inside the page and `connect-src 'none'` blocks that; crawlers fetch it directly, so this is
+  expected, and the policy is not to be loosened to chase it (kphutt.com scores 92 the same way).
 - The gate still refuses a `src/` folder, `node_modules/`, `package.json`, a lockfile or a
   source map in the served output, so a build toolchain cannot come back by accident. Bringing
   one back is a new decision record.

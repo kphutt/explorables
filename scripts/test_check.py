@@ -27,6 +27,7 @@ PAGE = """<!doctype html>
 <title>Demo</title>
 <meta name="description" content="A demo explorable.">
 <link rel="canonical" href="https://explorables.kphutt.com/demo/">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="demo.css">
 </head>
 <body>
@@ -44,6 +45,7 @@ LANDING = """<!doctype html>
 <title>Explorables</title>
 <meta name="description" content="The landing page.">
 <link rel="canonical" href="https://explorables.kphutt.com/">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
@@ -66,7 +68,7 @@ class Tree:
 
     def __init__(self, tmp: Path):
         self.source = tmp / "pages"
-        shutil.copytree(ce.SOURCE, self.source, ignore=lambda d, names: [n for n in names if n != "README.md" and Path(d, n).is_dir()])
+        shutil.copytree(ce.SOURCE, self.source, ignore=lambda d, names: [n for n in names if n not in ("README.md", "assets") and Path(d, n).is_dir()])
         # The real landing page links the real explorables and shared assets, which this tree
         # leaves out, so it gets a landing page of its own. test_the_real_tree_passes checks
         # the real one.
@@ -432,7 +434,7 @@ class Shared(GateTest):
 
     def setUp(self):
         super().setUp()
-        (self.tree.source / "assets").mkdir()
+        (self.tree.source / "assets").mkdir(exist_ok=True)
         (self.tree.source / "assets" / "shared.woff2").write_bytes(b"wOF2")
         self.tree.build()
 
@@ -455,6 +457,28 @@ class Shared(GateTest):
 
     def test_a_page_loading_a_shared_font_passes(self):
         self.tree.edit(self.tree.root / "demo" / "demo.css", 'url("demo.woff2")', 'url("../assets/shared.woff2")')
+        self.assertEqual(self.tree.failures(), [])
+
+
+class Icon(GateTest):
+    def test_a_page_without_an_icon(self):
+        self.tree.edit(self.page(), '<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">\n', "")
+        self.assertFails('demo/index.html: no <link rel="icon"')
+
+    def test_the_404_page_without_an_icon(self):
+        self.tree.edit(self.tree.root / "404.html", '<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">\n', "")
+        self.assertFails('404.html: no <link rel="icon"')
+
+    def test_an_icon_link_without_an_href(self):
+        self.tree.edit(self.page(), '<link rel="icon" href="/assets/favicon.svg"', '<link rel="icon"')
+        self.assertFails('demo/index.html: no <link rel="icon"')
+
+    def test_an_icon_that_is_missing(self):
+        self.tree.edit(self.page(), 'href="/assets/favicon.svg"', 'href="/assets/gone.svg"')
+        self.assertFails("broken internal reference /assets/gone.svg")
+
+    def test_a_shortcut_icon_counts(self):
+        self.tree.edit(self.page(), '<link rel="icon"', '<link rel="shortcut icon"')
         self.assertEqual(self.tree.failures(), [])
 
 
