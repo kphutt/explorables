@@ -392,11 +392,11 @@ class Layout(GateTest):
         self.assertFails("broken internal reference")
 
     def test_base_image_without_a_digest(self):
-        self.tree.edit(self.tree.dockerfile, "2.44.1@sha256:", "2.44.1 # sha256:")
+        self.tree.edit(self.tree.dockerfile, "3.0.0-beta.2@sha256:", "3.0.0-beta.2 # sha256:")
         self.assertFails("pinned by version and digest")
 
     def test_base_image_without_a_version(self):
-        self.tree.edit(self.tree.dockerfile, "static-web-server:2.44.1@", "static-web-server@")
+        self.tree.edit(self.tree.dockerfile, "static-web-server:3.0.0-beta.2@", "static-web-server@")
         self.assertFails("pinned by version and digest")
 
     def test_another_base_image(self):
@@ -648,8 +648,13 @@ class Headers(GateTest):
         self.assertFails("page404")
 
     def test_hidden_files_served(self):
-        self.tree.edit(self.tree.config, "ignore-hidden-files = true", "ignore-hidden-files = false")
-        self.assertFails("ignore-hidden-files")
+        self.tree.edit(self.tree.config, "include-hidden = false", "include-hidden = true")
+        self.assertFails("include-hidden")
+
+    def test_the_v2_hidden_files_key_does_not_count(self):
+        # v3 ignores ignore-hidden-files with only a warning, so the old name must not pass.
+        self.tree.edit(self.tree.config, "include-hidden = false", "ignore-hidden-files = true")
+        self.assertFails("include-hidden must be False")
 
     def test_directory_listing(self):
         self.tree.edit(self.tree.config, "directory-listing = false", "directory-listing = true")

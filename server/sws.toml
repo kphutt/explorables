@@ -1,5 +1,5 @@
 # static-web-server configuration for the container that serves explorables.kphutt.com.
-# https://static-web-server.net -- v2, the image the Dockerfile pins by version and digest.
+# https://static-web-server.net -- v3, the image the Dockerfile pins by version and digest.
 #
 # Explorables are standalone interactive pages: their own JavaScript, SVG, styles, images
 # and fonts, from pages/. They live on their own origin so that kphutt.com keeps
@@ -34,11 +34,17 @@ cache-control-headers = false
 # JavaScript, SVG, XML and plain text. Fonts are already compressed (woff2). The gate requires
 # it, and scripts/smoke.py checks each type comes back compressed.
 compression = true
+# v3 can also serve pre-compressed .gz/.br/.zst files found beside the originals. None are
+# built here, so it stays off, as in v2.
+compression-static = false
 directory-listing = false
 # Nothing here needs a dot-file, so none is served. scripts/check.py also fails
 # the build if one is in the output.
-ignore-hidden-files = true
-disable-symlinks = true
+# v3 names: include-hidden replaces v2's ignore-hidden-files (inverted), and follow-symlinks
+# replaces disable-symlinks (inverted). v3 only warns on a key it does not know, so an old name
+# would silently fall back to the default; scripts/check.py requires the new one.
+include-hidden = false
+follow-symlinks = false
 
 # /<slug> redirects to /<slug>/, so a page's relative links resolve inside its folder.
 redirect-trailing-slash = true

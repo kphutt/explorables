@@ -11,7 +11,11 @@
 # Pinned by version and digest, which scripts/check.py requires. It is the same image
 # kphutt.com is served from; Dependabot proposes updates here, and each one gets the same
 # container smoke test as any other change.
-FROM ghcr.io/static-web-server/static-web-server:2.44.1@sha256:94618e3d17802265a21926217e6f9e7832b311b6fbf5933684001739fafed06a
+#
+# A beta on purpose: 3.0.0-beta.2 is the only release that fixes GHSA-2fch-9x9r-mxmv (idle
+# connections were never closed). Move to 3.0.0 stable as soon as it is out and past the
+# 7-day wait. v3 renamed some config keys (server/sws.toml says which).
+FROM ghcr.io/static-web-server/static-web-server:3.0.0-beta.2@sha256:dd6db18272872154f1d287cc5b565626379339c34171263aa0a97b68c78f4ac3
 
 COPY server/sws.toml /etc/sws.toml
 COPY public/ /public/
