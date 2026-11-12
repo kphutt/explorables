@@ -599,6 +599,27 @@ class Headers(GateTest):
         self.tree.edit(self.tree.config, "compression = true", "compression = false")
         self.assertFails("compression")
 
+    def test_idle_timeout_left_out(self):
+        self.tree.edit(self.tree.config, "idle-timeout = 30\n", "")
+        self.assertFails("idle-timeout must be set")
+
+    def test_idle_timeout_zero_disables_it(self):
+        self.tree.edit(self.tree.config, "idle-timeout = 30", "idle-timeout = 0")
+        self.assertFails("idle-timeout must be set")
+
+    def test_idle_timeout_as_a_string(self):
+        self.tree.edit(self.tree.config, "idle-timeout = 30", 'idle-timeout = "30"')
+        self.assertFails("idle-timeout must be set")
+
+    def test_idle_timeout_as_a_boolean(self):
+        # TOML true is not a number of seconds, though Python counts it as the integer 1.
+        self.tree.edit(self.tree.config, "idle-timeout = 30", "idle-timeout = true")
+        self.assertFails("idle-timeout must be set")
+
+    def test_idle_timeout_of_one_second_passes(self):
+        self.tree.edit(self.tree.config, "idle-timeout = 30", "idle-timeout = 1")
+        self.assertEqual(self.tree.failures(), [])
+
     def test_compression_left_out(self):
         self.tree.edit(self.tree.config, "compression = true\n", "")
         self.assertFails("compression")

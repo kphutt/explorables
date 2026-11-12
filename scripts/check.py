@@ -169,6 +169,11 @@ def check_server(failures: list, config: Path = CONFIG) -> None:
             failures.append(f"{name}: no rule for {source!r} with Cache-Control max-age of at least {MIN_LONG_CACHE}")
 
     general = parsed.get("general", {})
+    # The GHSA-2fch-9x9r-mxmv fix: v3 closes idle connections only while idle-timeout is at
+    # least 1 (0 turns it off). Required explicitly, so a default change cannot undo it.
+    idle = general.get("idle-timeout")
+    if isinstance(idle, bool) or not isinstance(idle, int) or idle < 1:
+        failures.append(f"{name}: idle-timeout must be set to 1 or more seconds (GHSA-2fch-9x9r-mxmv), got {idle!r}")
     for key, want in (("page404", "404.html"), ("directory-listing", False), ("include-hidden", False),
                       ("compression", True)):
         if general.get(key) != want:
