@@ -221,6 +221,11 @@ jobs:
           PY
       - name: Smoke-test the candidate
         run: python3 scripts/smoke.py "$CAND_URL"
+      # The sitemap still being served, so the step after the promotion can tell IndexNow
+      # which pages this deploy changed. It never fails the deploy.
+      - name: Save the live sitemap for IndexNow
+        continue-on-error: true
+        run: python3 scripts/indexnow.py snapshot "${{ runner.temp }}/sitemap-before.xml"
       - name: Promote the smoke-tested revision
         run: |
           gcloud run services update-traffic "$SERVICE" \
@@ -230,6 +235,12 @@ jobs:
           # serving can never be deleted out from under a cold start.
           python3 scripts/move_live_tag.py "${IMAGE%:*}" "${IMAGE_DIGEST#*@}"
           echo "### Deployed \`${CAND_REV}\` to 100% of explorables traffic" >> "$GITHUB_STEP_SUMMARY"
+      # Bing, Yandex and the other IndexNow engines recrawl the pages that changed. A failure
+      # here (the API down, say) leaves the pages deployed and only waits for the engines to
+      # notice on their own, so it never fails the job.
+      - name: Tell IndexNow which pages changed
+        continue-on-error: true
+        run: python3 scripts/indexnow.py submit "${{ runner.temp }}/sitemap-before.xml"
       # A candidate that failed after being tagged must not leave its unverified URL reachable.
       - name: Remove the candidate tag
         if: always()

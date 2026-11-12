@@ -7,24 +7,23 @@ archive/done-YYYY-MM.md (one file per month). -->
 
 ## Blocked
 
-- **First deploy from this repository.** Waits on the owner: create the GitHub repository and
-  its settings, and apply kphutt.com's infrastructure change that gives this repository its
-  own deploy identity.
-
 ## In progress
 
-- **First deploy from this repository.** Next: once the repository and its deploy identity
-  exist, set the `cloud-run` environment and the repository variables, merge to `main`, and
-  confirm the deploy and the live smoke test.
 - **Move static-web-server off its beta.** It is on 3.0.0-beta.2, the only release that fixes
   GHSA-2fch-9x9r-mxmv. Next: move to 3.0.0-beta.3 once it is 7 days old (2026-11-18), which
   adds hardening for hidden files, OPTIONS requests and basic auth, or to 3.0.0 stable.
   kphutt.com's Dockerfile moves with it.
-- **Remove explorables from kphutt.com's repository.** Next: after the first deploy from here,
-  a pull request there that drops `explorables/`, its scripts and its deploy jobs.
+- **Remove explorables from kphutt.com's repository.** Next: merge kphutt.com's pull request
+  that drops its old `explorables/` copy, its deploy jobs and its deployer's rights on this
+  service, then apply it.
 
 ## Done
 
+- **Tell IndexNow what each deploy changed**, as kphutt.com does, with this host's own key.
+- **Live from this repository.** It is public, its settings are applied as code, and it
+  deploys explorables.kphutt.com with its own identity and image repository. The first
+  deploy passed the live smoke test, and Lighthouse scores it 100 on performance,
+  accessibility, best practices and SEO.
 - **Serve readable source, no minification.** backup-power is served as written, and the npm
   toolchain is gone (`docs/decisions/0002-serve-readable-source.md`). Earlier, its readable
   sources were added beside minified files, which terser and then esbuild produced.

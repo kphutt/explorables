@@ -119,7 +119,12 @@ EXPECTED_FILES = {
     "robots.txt": "crawlers would not be pointed at the sitemap",
     "sitemap.xml": "search engines would have to find each explorable on their own",
     "llms.txt": "language models would have no index of the explorables or of who made them",
+    # Nothing links it. IndexNow engines fetch it to check the key scripts/indexnow.py sends.
+    "indexnow.txt": "IndexNow engines would reject every submission",
 }
+
+# What IndexNow accepts as a key (scripts/indexnow.py): 8 to 128 of a-z, A-Z, 0-9 and dashes.
+INDEXNOW_KEY = re.compile(r"^[A-Za-z0-9-]{8,128}$")
 
 # Build inputs that must never be served: readable sources, the npm toolchain and source
 # maps. Folders by name, files by name or suffix.
@@ -298,6 +303,9 @@ def check_layout(source: Path, root: Path, failures: list) -> None:
     for name, why in EXPECTED_FILES.items():
         if not (root / name).is_file():
             failures.append(f"{name} missing from the output -- {why}")
+    key = root / "indexnow.txt"
+    if key.is_file() and not INDEXNOW_KEY.match(key.read_text(encoding="utf-8").strip()):
+        failures.append("indexnow.txt does not hold one IndexNow key (8 to 128 letters, digits or dashes)")
     if source.is_dir():
         shared = source / SHARED
         if shared.is_dir():
