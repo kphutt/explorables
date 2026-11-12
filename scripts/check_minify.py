@@ -17,7 +17,7 @@ npm is held to the repository's baseline before anything is installed: npm 11.10
 so .npmrc's min-release-age is enforced rather than ignored, and ignore-scripts on, so no
 package's install script runs. `npm ci` also gets --ignore-scripts on its command line.
 
-After a terser update changes the output, run with --write, review the diff of the served
+After an esbuild update changes the output, run with --write, review the diff of the served
 files, and commit them with the update.
 """
 

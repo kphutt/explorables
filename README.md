@@ -54,9 +54,9 @@ The rules:
 
 An explorable may ship minified files and keep the readable ones it is built from in
 `pages/<slug>/src/`, under the same names. backup-power does. `src/` is never served. The
-minifier is `scripts/minify.py`, with terser for JavaScript, and `scripts/check_minify.py`
+minifier is `scripts/minify.py`, with esbuild for JavaScript and CSS, and `scripts/check_minify.py`
 fails unless minifying `src/` from a clean `npm ci` gives the committed files byte for byte.
-Both make their own clean install of the locked terser in a temporary folder.
+Both make their own clean install of the locked esbuild in a temporary folder.
 
 To change a page that has sources, edit `src/`, then rewrite the served files and commit both:
 

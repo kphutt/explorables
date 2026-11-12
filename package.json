@@ -4,6 +4,6 @@
   "description": "Build tools only: the minifier for explorables with readable sources (scripts/minify.py). Nothing here is served.",
   "license": "Apache-2.0",
   "devDependencies": {
-    "terser": "5.36.0"
+    "esbuild": "0.28.2"
   }
 }

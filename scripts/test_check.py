@@ -428,7 +428,7 @@ class Sources(GateTest):
         self.assertFails("demo/src: not a folder")
 
     def test_node_modules_in_the_output(self):
-        (self.tree.root / "demo" / "node_modules" / "terser").mkdir(parents=True)
+        (self.tree.root / "demo" / "node_modules" / "esbuild").mkdir(parents=True)
         self.assertFails("demo/node_modules")
 
     def test_package_json_in_the_output(self):

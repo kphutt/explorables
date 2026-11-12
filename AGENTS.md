@@ -19,7 +19,7 @@ licenses; this file is how the repository works.
   `harden_github.py` (the repository's GitHub settings), and their `test_*.py`.
 - `pages/<slug>/src/`: an explorable's readable sources, when it ships minified files. Never
   served. `scripts/minify.py` minifies them and `scripts/check_minify.py` checks the result.
-- `package.json`, `package-lock.json`, `.npmrc`, `mise.toml`: the minifier's toolchain (terser,
+- `package.json`, `package-lock.json`, `.npmrc`, `mise.toml`: the minifier's toolchain (esbuild,
   and the Node that runs it). Build tools only.
 - `.github/workflows/`: `ci.yml` (gate, image, deploy) and `rollback.yml`.
 - `BACKLOG.md`: open work. Its top In progress line is the next action.
@@ -48,7 +48,9 @@ licenses; this file is how the repository works.
   `npm ci` gives them byte for byte. Edit `src/`, run `python scripts/check_minify.py --write`,
   and commit both. The npm baseline: `npm ci` only, the lockfile committed, and `.npmrc` with
   `ignore-scripts=true` and `min-release-age=7`, which need npm 11.10.0 or newer (the check
-  refuses an older one).
+  refuses an older one). esbuild needs no install script: npm installs its platform binary
+  (`@esbuild/<os>-<cpu>`) as an optional dependency, and the lockfile pins every one, Linux
+  included, so CI installs the same version.
 
 ## Commands
 ```bash
@@ -132,7 +134,7 @@ in `scripts/check.py` only as a deliberate decision.
 ## Dependencies
 Every pin has a Dependabot entry (`.github/dependabot.yml`), each with a 7-day wait after a
 release: the actions (pinned by commit SHA), the server image (pinned by version and digest),
-the pre-commit hooks, and npm (terser and its dependencies). A terser update can change the
+the pre-commit hooks, and npm (esbuild and its platform binaries). An esbuild update can change the
 minified output; its PR then fails the minify check until the served files are rewritten with
 `--write` and reviewed, which is the point. Node is pinned in `mise.toml` by hand. A gitleaks bump also needs `GITLEAKS_VERSION` and `GITLEAKS_SHA256`
 in `ci.yml` changed to match.
