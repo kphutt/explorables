@@ -1,0 +1,4 @@
+# The image takes only server/sws.toml and the checked build in public/.
+*
+!server/sws.toml
+!public/

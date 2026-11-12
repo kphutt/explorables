@@ -1,0 +1,29 @@
+# The build (scripts/build.py)
+public/
+
+# npm (package.json, package-lock.json): installed with `npm ci`, never committed
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Agent settings are user-level, never committed
+.claude/
+
+# Logs
+debug.log
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key

@@ -1,0 +1,51 @@
+version: 2
+
+# Every pin in this repository has an ecosystem here, so a pin that is merely old still gets a
+# pull request, and every bump passes the same gate and review as any other change.
+#
+# Every entry waits 7 days after a release before proposing it, so a compromised release is
+# usually caught upstream first. Security updates skip the wait.
+
+updates:
+  # The actions every workflow pins by commit SHA. Grouped, so they arrive as one PR.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(actions)"
+    labels:
+      - dependencies
+
+  # The server image the Dockerfile pins by version and digest. The container smoke test in
+  # ci.yml runs on the PR.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(image)"
+    labels:
+      - dependencies
+
+  # .pre-commit-config.yaml pins its hooks to a release. Dependabot has no security updates
+  # for pre-commit, so every hook bump waits the full 7 days. A gitleaks bump also needs
+  # GITLEAKS_VERSION and GITLEAKS_SHA256 in ci.yml changed to match, by hand.
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(hooks)"
+    labels:
+      - dependencies

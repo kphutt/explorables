@@ -1,0 +1,14 @@
+# Who owns what. Every path is the owner's; the lines below name the surfaces where a change
+# matters most, so a reviewer knows to read them closely.
+* @kphutt
+
+# The deploy and its trust: the workflows, and the checks that guard them.
+/.github/ @kphutt
+/scripts/check_workflows.py @kphutt
+/scripts/move_live_tag.py @kphutt
+
+# The security policy every response is served with, and the gate that holds it.
+/server/sws.toml @kphutt
+/scripts/check.py @kphutt
+/scripts/rules.py @kphutt
+/Dockerfile @kphutt

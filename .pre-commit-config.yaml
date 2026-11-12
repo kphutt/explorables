@@ -1,0 +1,28 @@
+# Standard pre-commit config (https://pre-commit.com), self-contained, so any clone gets the
+# same checks. Install once per clone, or there is no local gate at all and nothing says so:
+#
+#     python -m pre_commit install --hook-type pre-commit --hook-type pre-push
+#
+# Two stages, matching where each check earns its cost:
+#
+#   pre-commit  gitleaks, pinned below. A secret is worth catching before it exists in history.
+#   pre-push    the CI gate. scripts/local_verify.py runs the `ci` job's commands from
+#               .github/workflows/ci.yml verbatim, so the two cannot drift.
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    # Keep in step with GITLEAKS_VERSION in .github/workflows/ci.yml.
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        stages: [pre-commit]
+
+  - repo: local
+    hooks:
+      - id: local-verify
+        name: build the pages and check them (mirrors the CI ci job)
+        entry: python scripts/local_verify.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

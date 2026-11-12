@@ -1,0 +1,13 @@
+# LF everywhere, so diffs, hashes and secret scans are byte-stable across machines. The
+# served files are compared byte for byte with what the minifier makes from src/, so a
+# checkout that rewrote line endings would fail that check.
+* text=auto eol=lf
+
+*.woff2 binary
+*.woff binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.gif binary
+*.ico binary

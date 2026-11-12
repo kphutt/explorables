@@ -1,0 +1,3 @@
+# gitleaks config: the default rules, unchanged. Read by the pre-commit hook and the CI scan.
+[extend]
+useDefault = true

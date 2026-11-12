@@ -1,0 +1,241 @@
+name: Build and deploy
+
+# Builds and checks the explorables on every pull request, and on merge to main deploys
+# them to Cloud Run, blue-green. The deploy job skips itself until the WIF_PROVIDER
+# repository variable is set (AGENTS.md, "Deploying").
+#
+# The required status check is `ci`, the one job that runs every check. Branch protection
+# names that one check (scripts/harden_github.py).
+#
+# The file name is part of the Cloud Run trust: the Google identity this repository deploys
+# with accepts only this file and rollback.yml, on main. Renaming either means changing that
+# list too, in kphutt.com's infrastructure.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege by default. Only the deploy job widens this for itself, so a build
+# triggered by a pull request never holds a token that can publish anywhere.
+permissions:
+  contents: read
+
+# Deploys to main serialise; pull request builds get their own lane per branch and
+# supersede themselves, so a PR build can never queue behind or delay a deploy.
+concurrency:
+  group: "build-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Every check, as steps of one job: the secret scan, the build and its gate, the workflow
+  # check, the unit tests, then the container, run read-only and smoke-tested on the runner.
+  # One job because each job is billed and booted separately, and these are seconds of work
+  # each. Runs on pull requests too, so a change that breaks the image or a header fails
+  # review, not the deploy. The same commands run at pre-push (scripts/local_verify.py).
+  ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      # Keep in step with the gitleaks rev in .pre-commit-config.yaml. The checksum is the
+      # one gitleaks publishes for this release (gitleaks_<version>_checksums.txt).
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history, so the secret scan sees every commit, not just the last one.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan the whole history for secrets (gitleaks)
+        working-directory: ${{ runner.temp }}
+        run: |
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLo "$tarball" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" gitleaks
+          ./gitleaks git --redact --no-banner --exit-code 1 "$GITHUB_WORKSPACE"
+      - name: Build
+        run: python3 scripts/build.py
+      - name: Check the build
+        run: python3 scripts/check.py public | tee "${{ runner.temp }}/check.txt"
+      - name: Check the workflows
+        run: python3 scripts/check_workflows.py
+      - name: Unit tests
+        run: python3 -m unittest discover -s scripts -p "test_*.py"
+      # The check output carries the diagnosis: which page, which inline code or which
+      # weakened directive. The job summary renders on the run page and needs no
+      # permissions, so it also works for Dependabot's restricted token.
+      - name: Report the check result
+        if: always()
+        run: |
+          {
+            echo '### Gate'
+            echo
+            echo '```'
+            cat "${{ runner.temp }}/check.txt" 2>/dev/null || echo 'check did not run'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      # The image copies exactly the checked public/, so what Cloud Run serves is what
+      # scripts/check.py passed.
+      - name: Build the image
+        run: docker build --pull -t explorables:candidate .
+      - name: Run it and smoke-test it
+        run: |
+          docker run -d --name explorables -p 8080:8080 --read-only explorables:candidate
+          python3 scripts/smoke.py http://127.0.0.1:8080
+      - name: Show the server log if the smoke test failed
+        if: failure()
+        run: docker logs explorables || true
+      - name: Keep the image for the deploy job
+        if: github.event_name != 'pull_request'
+        run: docker save explorables:candidate | gzip > "${{ runner.temp }}/explorables-image.tar.gz"
+      - name: Upload the image
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: explorables-image
+          path: ${{ runner.temp }}/explorables-image.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+  # Blue-green deploy to Cloud Run, keyless (Workload Identity Federation, no service
+  # account key exists). The image pushed is the one the image job just smoke-tested.
+  #
+  #   1. push it, and resolve its immutable digest;
+  #   2. deploy that digest as a new revision with no traffic. No --tag and no
+  #      --revision-suffix: either makes gcloud write the revision's name into the service's
+  #      template, and a later `tofu apply` of any template change would resend that name and
+  #      get a 409. Cloud Run names the revision instead, and the job checks the template
+  #      kept no name and that the newest revision runs the pushed digest;
+  #   3. tag that revision afterwards (a traffic-only update), which gives it its own URL;
+  #   4. smoke-test the tagged URL;
+  #   5. pass: send 100% of traffic to that exact revision. Fail: change nothing, and the
+  #      previous revision keeps serving.
+  #
+  # scripts/check_workflows.py refuses --tag and --revision-suffix on any deploy command.
+  # rollback.yml points traffic back at any earlier revision by name.
+  deploy:
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.WIF_PROVIDER != ''
+    runs-on: ubuntu-24.04
+    # The Google identity trusts only tokens from this environment, so a job that does not
+    # name it cannot use that identity.
+    environment: cloud-run
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # the GitHub OIDC token WIF exchanges; nothing else
+    # Shared with rollback.yml: one change to the traffic split at a time, never cancelled
+    # halfway through.
+    concurrency:
+      group: explorables-traffic
+      cancel-in-progress: false
+    env:
+      GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/${{ vars.ARTIFACT_REPO }}/explorables:${{ github.sha }}
+    steps:
+      - name: Checkout (for the smoke test and its expected headers)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Get the tested image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: explorables-image
+          path: ${{ runner.temp }}
+      - name: Load it
+        run: gunzip -c "${{ runner.temp }}/explorables-image.tar.gz" | docker load
+      - name: Authenticate to Google Cloud (WIF, no key)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOYER_SA }}
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Push the image and resolve its digest
+        run: |
+          # A short tag keeps the candidate's URL inside DNS's 63-character label limit.
+          echo "CAND_TAG=cand-${GITHUB_SHA::12}" >> "$GITHUB_ENV"
+          gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+          docker tag explorables:candidate "$IMAGE"
+          docker push "$IMAGE"
+          digest=$(gcloud artifacts docker images describe "$IMAGE" --format='value(image_summary.digest)')
+          python3 -c 'import re,sys; sys.exit(0 if re.fullmatch(r"sha256:[0-9a-f]{64}", sys.argv[1]) else "no digest for the pushed image: " + repr(sys.argv[1]))' "$digest"
+          echo "IMAGE_DIGEST=${IMAGE%:*}@${digest}" >> "$GITHUB_ENV"
+      # No tag and no revision suffix here: Cloud Run names the revision (see the job comment).
+      - name: Deploy the candidate revision at 0% traffic
+        run: |
+          gcloud run services update "$SERVICE" \
+            --image="$IMAGE_DIGEST" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" \
+            --no-traffic --quiet
+          gcloud run services describe "$SERVICE" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" --format=json > "${{ runner.temp }}/service.json"
+          python3 - "${{ runner.temp }}/service.json" <<'PY'
+          import json, os, sys
+          service = json.load(open(sys.argv[1]))
+          name = service["spec"]["template"].get("metadata", {}).get("name")
+          if name:
+              sys.exit(f"the service template names revision {name}; a later tofu apply would resend it")
+          rev = service["status"].get("latestCreatedRevisionName")
+          if not rev:
+              sys.exit("no latest created revision")
+          image = service["spec"]["template"]["spec"]["containers"][0]["image"]
+          if image != os.environ["IMAGE_DIGEST"]:
+              sys.exit(f"the template runs {image}, not the pushed {os.environ['IMAGE_DIGEST']}")
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"CAND_REV={rev}\n")
+          print(f"Candidate {rev}, 0% traffic, template unnamed")
+          PY
+      # The newest revision must run the image just pushed, so a revision made by anything
+      # else in between is never tagged, smoke-tested or promoted.
+      - name: Give the candidate a test URL (no traffic)
+        run: |
+          gcloud run revisions describe "$CAND_REV" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" --format='value(spec.containers[0].image)' > "${{ runner.temp }}/rev-image.txt"
+          python3 -c 'import os,sys; i=open(sys.argv[1]).read().strip(); r=os.environ["CAND_REV"]; sys.exit(0 if i == os.environ["IMAGE_DIGEST"] else f"revision {r} runs {i!r}, not the pushed image")' "${{ runner.temp }}/rev-image.txt"
+          gcloud run services update-traffic "$SERVICE" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" \
+            --update-tags="${CAND_TAG}=${CAND_REV}" --quiet
+          gcloud run services describe "$SERVICE" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" --format=json > "${{ runner.temp }}/service.json"
+          python3 - "${{ runner.temp }}/service.json" <<'PY'
+          import json, os, sys
+          tag, rev = os.environ["CAND_TAG"], os.environ["CAND_REV"]
+          urls = [t["url"] for t in json.load(open(sys.argv[1]))["status"].get("traffic", [])
+                  if t.get("tag") == tag and t.get("revisionName") == rev and t.get("url")]
+          if len(urls) != 1:
+              sys.exit(f"could not find the test URL for tag {tag}")
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"CAND_URL={urls[0]}\n")
+          print(f"Candidate {rev} at {urls[0]}")
+          PY
+      - name: Smoke-test the candidate
+        run: python3 scripts/smoke.py "$CAND_URL"
+      - name: Promote the smoke-tested revision
+        run: |
+          gcloud run services update-traffic "$SERVICE" \
+            --region="$GCP_REGION" --project="$GCP_PROJECT" \
+            --to-revisions="${CAND_REV}=100" --quiet
+          # The registry's cleanup policy keeps the image tagged live, so the image that is
+          # serving can never be deleted out from under a cold start.
+          python3 scripts/move_live_tag.py "${IMAGE%:*}" "${IMAGE_DIGEST#*@}"
+          echo "### Deployed \`${CAND_REV}\` to 100% of explorables traffic" >> "$GITHUB_STEP_SUMMARY"
+      # A candidate that failed after being tagged must not leave its unverified URL reachable.
+      - name: Remove the candidate tag
+        if: always()
+        run: |
+          if [ -n "${CAND_REV:-}" ]; then
+            gcloud run services update-traffic "$SERVICE" \
+              --region="$GCP_REGION" --project="$GCP_PROJECT" \
+              --remove-tags="$CAND_TAG" --quiet || true
+          fi
