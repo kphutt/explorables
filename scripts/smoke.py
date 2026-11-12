@@ -9,6 +9,7 @@ candidate revision before it gets any traffic.
 
 What it checks, against BASE:
   - the landing page and its stylesheet return 200;
+  - indexnow.txt, the IndexNow key, returns 200;
   - robots.txt and sitemap.xml return 200, robots.txt names the sitemap, and every URL the
     sitemap lists returns 200 with no X-Robots-Tag, so it can be found in search;
   - every pages/<slug>/ is in the sitemap, and /<slug> redirects to exactly /<slug>/;
@@ -158,6 +159,7 @@ def main() -> int:
     check("/index.css", content_type="text/css")
     check("/README.md", status=404, content_type="text/html")
 
+    check("/indexnow.txt", content_type="text/plain")
     _, robots = check("/robots.txt", content_type="text/plain")
     if f"Sitemap: {ORIGIN}/sitemap.xml" not in robots.decode("utf-8", "replace").splitlines():
         failures.append(f"/robots.txt has no 'Sitemap: {ORIGIN}/sitemap.xml' line")
