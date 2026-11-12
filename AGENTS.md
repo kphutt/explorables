@@ -18,7 +18,8 @@ licenses; this file is how the repository works.
 - `scripts/`: `build.py` (pages/ to public/), `check.py` (the gate) and `rules.py` (the page
   and header rules it applies), `smoke.py` (a running copy), `check_workflows.py` (the deploy
   workflows), `local_verify.py` (the CI gate, locally), `move_live_tag.py` (deploy helper),
-  `harden_github.py` (the repository's GitHub settings), and their `test_*.py`.
+  `harden_github.py` (the repository's GitHub settings), `indexnow.py` (tells search engines
+  what a deploy changed), and their `test_*.py`.
 - `.github/workflows/`: `ci.yml` (gate, image, deploy) and `rollback.yml`.
 - `BACKLOG.md`: open work. Its top In progress line is the next action.
 
@@ -118,6 +119,10 @@ in `scripts/check.py` only as a deliberate decision.
   (a traffic-only `--update-tags`), smoke-tests the tagged URL, and promotes the revision by
   its exact name. If anything fails, the old revision keeps serving. `scripts/check_workflows.py`
   refuses either flag on any deploy command.
+- After a promotion, `scripts/indexnow.py` tells IndexNow engines (Bing, Yandex and others)
+  which pages the deploy changed: new ones, and ones whose sitemap `lastmod` moved. Both its
+  steps are `continue-on-error`, so it never fails a deploy. Its key, `pages/indexnow.txt`, is
+  this host's own and public by design; the gate requires it.
 - After a promotion, `scripts/move_live_tag.py` moves the registry's `live` tag to the
   serving image, so the registry's cleanup never deletes it. It uses `tags update`, which the
   deployer's role allows; `docker tags add` would need a delete permission it does not have.

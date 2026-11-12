@@ -569,6 +569,20 @@ class Layout(GateTest):
         self.assertFails("pinned by version and digest")
 
 
+class IndexNowKey(GateTest):
+    def test_a_missing_key_file(self):
+        (self.tree.root / "indexnow.txt").unlink()
+        self.assertFails("indexnow.txt missing")
+
+    def test_a_key_that_is_too_short(self):
+        (self.tree.root / "indexnow.txt").write_text("abc\n", encoding="utf-8")
+        self.assertFails("indexnow.txt does not hold one IndexNow key")
+
+    def test_two_keys(self):
+        (self.tree.root / "indexnow.txt").write_text("abcdef123456\nabcdef654321\n", encoding="utf-8")
+        self.assertFails("indexnow.txt does not hold one IndexNow key")
+
+
 class Shared(GateTest):
     """pages/assets/ holds files the pages share. It is not an explorable."""
 

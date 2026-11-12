@@ -1,7 +1,7 @@
 # Keep explorables in their own repository
 
 ## Status
-Accepted
+Accepted. The npm toolchain part is superseded by 0002.
 
 ## Context
 Explorables started inside kphutt.com's repository, served from their own origin,
