@@ -21,5 +21,7 @@ archive/done-YYYY-MM.md (one file per month). -->
 
 ## Done
 
+- **backup-power: readable sources and a minify check.** The served files are proven to be
+  exactly what `src/` minifies to, from a clean `npm ci`.
 - **Moved from kphutt.com's repository**, with the landing page, the server config, the gate
   and its tests, the container smoke test, the blue-green deploy and the rollback workflow.

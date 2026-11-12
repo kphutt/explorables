@@ -4,6 +4,10 @@ Interactive pages that go with posts on [kphutt.com](https://kphutt.com/). Each 
 standalone page: its own HTML, script, styles, images and fonts, with nothing running on a
 server. They are served at `https://explorables.kphutt.com/<slug>/`.
 
+| Explorable | What it is |
+|---|---|
+| [backup-power](https://explorables.kphutt.com/backup-power/) | The storm test: five houses ride out the same two-week winter power outage, each with a different backup. |
+
 ## How it works
 
 `pages/` holds the landing page, the 404 page and one folder per explorable.
@@ -46,6 +50,24 @@ The rules:
   through the CSSOM (`element.style`), never a `style=` attribute.
 - No dot-files. READMEs and `src/` folders stay in the repository and are never served.
 
+## Readable sources
+
+An explorable may ship minified files and keep the readable ones it is built from in
+`pages/<slug>/src/`, under the same names. backup-power does. `src/` is never served. The
+minifier is `scripts/minify.py`, with terser for JavaScript, and `scripts/check_minify.py`
+fails unless minifying `src/` from a clean `npm ci` gives the committed files byte for byte.
+Both make their own clean install of the locked terser in a temporary folder.
+
+To change a page that has sources, edit `src/`, then rewrite the served files and commit both:
+
+```bash
+python scripts/check_minify.py --write    # rewrite pages/<slug>/ from pages/<slug>/src/
+python scripts/check_minify.py            # the check CI runs
+```
+
+npm must be 11.10.0 or newer, or `.npmrc`'s 7-day wait on new releases does nothing. The Node
+pinned in `mise.toml` ships one that is.
+
 ## Security model
 
 Each explorable runs its own JavaScript, so the pages live on their own origin. A browser
@@ -74,6 +96,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
   ([LICENSE-CONTENT](LICENSE-CONTENT)): the words, numbers and data each explorable presents,
   including the text in its HTML and its README, and its images and screenshots. To reuse it,
   credit kphutt and link to <https://explorables.kphutt.com/>.
-- **Fonts** keep their own licenses, which sit beside them in the explorable's folder.
+- **Fonts** keep their own licenses, which sit beside them: the bundled Inter and Space
+  Grotesk are under the SIL Open Font License 1.1.
 - Pages link to the sources they cite. Those sources belong to their owners, and nothing here
   is affiliated with any company a page names.

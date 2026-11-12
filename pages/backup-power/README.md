@@ -12,6 +12,7 @@ Live at <https://explorables.kphutt.com/backup-power/>.
 - `app.js`: the simulation and page logic. It fills in the markup with DOM methods, never with HTML strings, and has no `eval`.
 - `style.css`: the stylesheet, which also loads the self-hosted fonts.
 - `assets/fonts/`: Inter and Space Grotesk, under the SIL Open Font License.
+- `src/`: the readable `index.html`, `app.js` and `style.css` the three files above are minified from. It is not served. The repository README says how to change them.
 
 ## Numbers
 
