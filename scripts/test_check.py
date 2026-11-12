@@ -406,6 +406,24 @@ class Generated(GateTest):
     def test_last_changed_is_empty_outside_the_repository(self):
         self.assertEqual(build.last_changed(build.page_files(self.tree.source, "/demo/")), "")
 
+    def test_every_page_describes_the_same_author(self):
+        # The pages' JSON-LD is written by hand, so this keeps its Person record the same
+        # as build.py's, and the same as kphutt.com's (same @id, same profiles).
+        import json
+        import re
+        for path in build.page_paths(build.SOURCE):
+            page = build.SOURCE / path.strip("/") / "index.html"
+            blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', page.read_text(encoding="utf-8"), re.S)
+            nodes = [n for b in blocks for n in json.loads(b).get("@graph", [])]
+            people = [n for n in nodes if n.get("@type") == "Person"]
+            self.assertEqual(len(people), 1, page)
+            self.assertEqual(people[0]["@id"], build.AUTHOR_ID, page)
+            self.assertEqual(people[0]["name"], build.AUTHOR, page)
+            self.assertEqual(people[0]["description"], build.AUTHOR_LINE, page)
+            self.assertEqual(people[0]["sameAs"], list(build.PROFILES.values()), page)
+            authored = [n for n in nodes if n.get("@type") != "Person"]
+            self.assertTrue(authored and all(n.get("author") == {"@id": build.AUTHOR_ID} for n in authored), page)
+
     def test_last_changed_ignores_output_that_is_not_a_date(self):
         from unittest import mock
         fake = mock.Mock(returncode=0, stdout="fatal: not a date")
