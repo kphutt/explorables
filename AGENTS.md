@@ -1,7 +1,7 @@
 # explorables — contributor guide
 
 ## What This Is
-Standalone interactive pages that go with posts on kphutt.com: JavaScript, SVG, toggles and
+Interactive explainers you can play with: standalone pages of JavaScript, SVG, toggles and
 static files, nothing that runs on a server. Served from Cloud Run at
 `https://explorables.kphutt.com/<slug>/`. The README has the rules for a page and the
 licenses; this file is how the repository works.

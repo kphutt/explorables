@@ -1,7 +1,7 @@
 # Explorables
 
-Interactive pages that go with posts on [kphutt.com](https://kphutt.com/). Each one is a
-standalone static page, served at `https://explorables.kphutt.com/<slug>/`.
+Interactive explainers you can play with. Each one is a standalone static page, served at
+`https://explorables.kphutt.com/<slug>/`.
 
 | Explorable | What it is |
 |---|---|
