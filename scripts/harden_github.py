@@ -46,7 +46,7 @@ SETTINGS = {
     "delete_branch_on_merge": True,
     "has_wiki": False,
     "has_projects": False,
-    "description": "Interactive pages that go with posts on kphutt.com, served at explorables.kphutt.com",
+    "description": "Interactive explainers you can play with, starting with a backup-power storm test",
     "homepage": "https://explorables.kphutt.com",
 }
 
